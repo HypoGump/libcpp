@@ -1,8 +1,9 @@
 #ifndef LIBCPP_LOGFILE_H_
 #define LIBCPP_LOGFILE_H_
 
-#include "../thread/Mutex.h"
 #include <string>
+#include <memory>
+#include <mutex>
 
 namespace libcpp
 {
@@ -28,7 +29,7 @@ private:
     size_t rollSize_;
     time_t startDay_;
     time_t lastFlushTime_;
-    std::unique_ptr<Mutex> mutex_;
+    std::unique_ptr<std::mutex> mutex_;
     class File;
     std::unique_ptr<File> file_;
     

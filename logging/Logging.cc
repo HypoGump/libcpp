@@ -1,10 +1,13 @@
 #include "Logging.h"
-#include "/datetime/TimeStamp.h"
-#include "/thread/Thread.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <thread>
+#include <assert.h>
+#include <chrono>
+
+using namespace std::chrono;
 
 namespace libcpp
 {
@@ -61,11 +64,12 @@ Logger::FlushFunc g_flush = defaultFlush;
 
 using namespace libcpp;
 
-Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, int line) 
+Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char* func, int line) 
   : timestamp_(TimeStamp::now()),
     stream_(),
     level_(level),
     line_(line),
+    func_(func),
     fullname_(file),
     basename_(NULL)
 {
@@ -74,11 +78,11 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, int line)
   
   recordFormatTime();
   // record ThreadId
-  Format tid("%05d ", CurrentThread::tid());
-  assert(tid.length() == 6);
-  stream_ << T(tid.data(), 6);
+  stream_ << std::this_thread::get_id() << ' ';
   // record LogLevel
-  stream_ << T(LogLevelName[level_], 6);
+  stream_ << std::string(LogLevelName[level_]);
+  // record file/func:line 
+  stream_ << basename_ << '/' << func_ << ':' << line_ << ' ';
   // record old errno
   if (savedErrno != 0) {
     // libcpp::strerror, not syscall
@@ -100,36 +104,25 @@ void Logger::Impl::recordFormatTime() {
         tm_time.tm_hour, tm_time.tm_min, tm_time.tm_sec);
     assert(len == 17); (void)len;
   }
-  Format us(".%06dZ ", microseconds);
-  stream_ << T(t_time, 17) << T(us.data(), 9);
+  ::snprintf(t_time+17, 15, ".%06dZ ", microseconds);
+  stream_ << t_time;
 }
 
-void Logger::Impl::finish() {
-  stream_ << " - " << basename_ << ':' << line_ << '\n';
-}
 
-Logger::Logger(const char* file, int line)
-  : impl_(INFO, 0, file, line)
-{}
 
-Logger::Logger(const char* file, int line, LogLevel level)
-  : impl_(level, 0, file, line)
-{}
-
-Logger::Logger(const char* file, int line, LogLevel level, const char* func)
-  : impl_(level, 0, file, line)
+Logger::Logger(const char* file, const char* func, int line, LogLevel level)
+  : impl_(level, 0, file, func, line)
 {
-  impl_.stream_ << func << ": ";
 }
 
-Logger::Logger(const char* file, int line, bool toAbort)
-  : impl_(toAbort?FATAL:ERROR, errno, file, line)
+Logger::Logger(const char* file, const char* func, int line, bool toAbort)
+  : impl_(toAbort?FATAL:ERROR, errno, file, func, line)
 {}
 
 Logger::~Logger() {
-  impl_.finish();
-  const LogStream::Buffer& buf(stream().data()); // Why need copy?
-  g_output(buf.data(), buf.length());
+  impl_.stream_ << '\n';
+  std::string buf = impl_.stream_.str();
+  g_output(buf.c_str(), buf.size());
   if (impl_.level_ == FATAL) {
     g_flush();
     abort();

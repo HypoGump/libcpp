@@ -1,9 +1,8 @@
 #ifndef LIBCPP_LOGGING_H_
 #define LIBCPP_LOGGING_H_
 
-#include "LogStream.h"
-#include "/datetime/TimeStamp.h"
-
+#include "../datetime/TimeStamp.h"
+#include <sstream>
 #include <functional>
 
 
@@ -32,16 +31,14 @@ public:
     NUM_LOG_LEVELS,
   };
   
-  Logger(const char* file, int line);
-  Logger(const char* file, int line, LogLevel level);
-  Logger(const char* file, int line, LogLevel level, const char* func);
-  Logger(const char* file, int line, bool toAbort);
+  Logger(const char* file, const char* func, int line, LogLevel level);
+  Logger(const char* file, const char* func, int line, bool toAbort);
   ~Logger();
   
   static LogLevel logLevel();
   static void setLogLevel(LogLevel level);
   
-  LogStream& stream() { return impl_.stream_; }
+  std::ostringstream& stream() { return impl_.stream_; }
   
   typedef std::function<void(const char*, int)> OutputFunc;
   typedef std::function<void()> FlushFunc;
@@ -53,14 +50,14 @@ private:
   {
    public:
     typedef Logger::LogLevel LogLevel;
-    Impl(LogLevel level, int savedErrno, const char* file, int line);
+    Impl(LogLevel level, int savedErrno, const char* file, const char* func, int line);
     void recordFormatTime();
-    void finish();
-
+    
     TimeStamp timestamp_;
-    LogStream stream_;
+    std::ostringstream stream_;
     LogLevel level_;
     int line_;
+    const char* func_;
     const char* fullname_;
     const char* basename_;
   };
@@ -74,18 +71,18 @@ private:
  *  __LINE__: the line number of the code
  */
 #define LOG_TRACE if (libcpp::Logger::logLevel() <= libcpp::Logger::TRACE) \
-    libcpp::Logger(__FILE__, __LINE__, libcpp::Logger::TRACE, __func__).stream()
+    libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::TRACE).stream()
 #define LOG_DEBUG if (libcpp::Logger::logLevel() <= libcpp::Logger::DEBUG) \
-    libcpp::Logger(__FILE__, __LINE__, libcpp::Logger::DEBUG, __func__).stream()
+    libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::DEBUG).stream()
 #define LOG_INFO if (libcpp::Logger::logLevel() <= libcpp::Logger::INFO) \
-    libcpp::Logger(__FILE__, __LINE__).stream()
-#define LOG_WARN libcpp::Logger(__FILE__, __LINE__, libcpp::Logger::WARN).stream()
-#define LOG_ERROR libcpp::Logger(__FILE__, __LINE__, libcpp::Logger::ERROR).stream()
-#define LOG_FATAL libcpp::Logger(__FILE__, __LINE__, libcpp::Logger::FATAL).stream()
-#define LOG_SYSERR libcpp::Logger(__FILE__, __LINE__, false).stream()
-#define LOG_SYSFATAL libcpp::Logger(__FILE__, __LINE__, true).stream()
+    libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::INFO).stream()
+#define LOG_WARN \
+    libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::WARN).stream()
+#define LOG_ERROR \
+    libcpp::Logger(__FILE__, __func__, __LINE__, false).stream()
+#define LOG_FATAL \
+    libcpp::Logger(__FILE__, __func__, __LINE__, true).stream()
 
-// C style
 
 
 } // libcpp

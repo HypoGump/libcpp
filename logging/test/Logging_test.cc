@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <functional>
+#include <chrono>
 
 using std::string;
 
@@ -29,7 +30,7 @@ void bench()
 {
   //libcpp::Logger::OutputFunc output = dummyOutput;
   libcpp::Logger::setOutputFunc(dummyOutput);
-  libcpp::TimeStamp start(libcpp::TimeStamp::now());
+  auto start = std::chrono::steady_clock::now();
   g_total = 0;
 
   const int batch = 1000*1000;
@@ -44,8 +45,9 @@ void bench()
              << (kLongLog ? longStr : empty)
              << i;
   }
-  libcpp::TimeStamp end(libcpp::TimeStamp::now());
-  double seconds = timeInterval(end, start);
+  auto end = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
+  double seconds = static_cast<double>(duration.count()/1000/1000);
   printf("%f seconds, %ld bytes, %.2f msg/s, %.2f MiB/s\n",
          seconds, g_total, batch / seconds, g_total / seconds / 1024 / 1024);
 }
@@ -58,9 +60,6 @@ int main()
   LOG_WARN << "World";
   LOG_ERROR << "Error";
   LOG_INFO << sizeof(libcpp::Logger);
-  LOG_INFO << sizeof(libcpp::LogStream);
-  LOG_INFO << sizeof(libcpp::Format);
-  LOG_INFO << sizeof(libcpp::LogStream::Buffer);
 
   bench();
 

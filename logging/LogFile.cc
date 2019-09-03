@@ -74,7 +74,7 @@ LogFile::LogFile(const std::string& basename, size_t rollSize,
     rollSize_(rollSize),
     startDay_(0),
     lastFlushTime_(0),
-    mutex_(threadSafe? new Mutex : NULL)
+    mutex_(threadSafe? new std::mutex : NULL)
 {
   assert(basename_.find('/') == std::string::npos);
   // create new file when construct
@@ -86,7 +86,7 @@ LogFile::~LogFile()
 
 void LogFile::append(const char* logline, int len) {
   if (mutex_) {
-    MutexLockGuard lock(*mutex_);
+    std::lock_guard<std::mutex> lock(*mutex_);
     append_unlocked(logline, len);
   }
   else {
@@ -96,7 +96,7 @@ void LogFile::append(const char* logline, int len) {
 
 void LogFile::flush() {
   if (mutex_) {
-    MutexLockGuard lock(*mutex_);
+    std::lock_guard<std::mutex> lock(*mutex_);
     file_->flush();
   }
   else {
