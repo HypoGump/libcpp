@@ -5,7 +5,6 @@
 #include <errno.h>
 #include <thread>
 #include <assert.h>
-#include <chrono>
 
 using namespace std::chrono;
 
@@ -73,7 +72,7 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
     fullname_(file),
     basename_(NULL)
 {
-  const char* base_start_pos = strchr(fullname_, '/');
+  const char* base_start_pos = strrchr(fullname_, '/');
   basename_ = (base_start_pos != NULL) ? base_start_pos + 1 : fullname_;
   
   recordFormatTime();
@@ -82,7 +81,7 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
   // record LogLevel
   stream_ << std::string(LogLevelName[level_]);
   // record file/func:line 
-  stream_ << basename_ << '/' << func_ << ':' << line_ << ' ';
+  stream_ << basename_ << " - " << func_ << ':' << line_ << ' ';
   // record old errno
   if (savedErrno != 0) {
     // libcpp::strerror, not syscall

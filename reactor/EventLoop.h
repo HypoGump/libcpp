@@ -15,7 +15,7 @@ public:
   
   void loop();
   
-  void assertInThisThread()
+  void assertInLoopThread()
   {
     if (!isInLoopThread()) {
       abortNotInLoopThread();
@@ -27,7 +27,7 @@ public:
 private:
   void abortNotInLoopThread();
   
-  bool looping_
+  bool looping_;
   std::thread::id threadId_;
 };
 
