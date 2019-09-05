@@ -5,7 +5,7 @@ DIRS := $(shell ls -l ../../ | grep ^d | awk '{print $$9}')
 LIBSRC := $(foreach dir, $(DIRS), $(wildcard ../../$(dir)/*.cc))
 HEADERS := $(foreach dir, $(DIRS), $(wildcard ../../$(dir)/*.h))
 
-TARGETS := test1 test2 test3
+TARGETS := test1 test2 test3 test4
 
 all: $(TARGETS)
 
@@ -16,6 +16,9 @@ test2: test2.cc $(LIBSRC)
 	$(CC) $^ -o $@ $(CXXFALGS)
 
 test3: test3.cc $(LIBSRC)
+	$(CC) $^ -o $@ $(CXXFALGS)
+
+test4: test4.cc $(LIBSRC)
 	$(CC) $^ -o $@ $(CXXFALGS)
 
 clean:

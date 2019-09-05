@@ -11,24 +11,21 @@ class TimeStamp
 {
 public:
     TimeStamp();
-    explicit TimeStamp(int64_t sec, int64_t usec_);
+    explicit TimeStamp(int64_t microSecondsSinceEpoch);
     
     std::string toString() const;
     std::string toFormattedString() const;
     
     int64_t microSecondsSinceEpoch() const { 
-        return sec_ * kMicroSecondsPerSecond + usec_; 
+        return microSecondsSinceEpoch_; 
     }
     
-    int64_t seconds() const { return sec_; }
-    int64_t useconds() const { return usec_; }
-    
     static TimeStamp now();
+    static TimeStamp invalid() { return TimeStamp(); }
     static const int kMicroSecondsPerSecond = 1000 * 1000;
     
 private:
-    int64_t sec_;
-    int64_t usec_;
+    int64_t microSecondsSinceEpoch_;
 };
 
 inline bool operator< (TimeStamp lhs, TimeStamp rhs)
@@ -45,6 +42,12 @@ inline double timeInterval(TimeStamp high, TimeStamp low)
 {
   int64_t diff = high.microSecondsSinceEpoch() - low.microSecondsSinceEpoch();
   return static_cast<double>(diff) / TimeStamp::kMicroSecondsPerSecond;
+}
+
+inline TimeStamp addTime(TimeStamp time, double seconds)
+{
+  int64_t delta = static_cast<int64_t>(seconds * TimeStamp::kMicroSecondsPerSecond);
+  return TimeStamp(time.microSecondsSinceEpoch() + delta);
 }
 
 } // libcpp
