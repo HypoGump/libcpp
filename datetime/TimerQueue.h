@@ -4,6 +4,8 @@
 #include "Timer.h"
 #include "TimerId.h"
 
+#include "reactor/Channel.h"
+
 #include <set>
 #include <vector>
 
@@ -21,11 +23,12 @@ public:
   TimerId addTimer(const TimerCallback& cb, TimeStamp when, double interval);
   
 private:
-  typedef std::pair<TimerStamp, Timer*> TimerEntry;
+  typedef std::pair<TimeStamp, Timer*> TimerEntry;
   typedef std::set<TimerEntry> TimerList;
   
   void handleRead();
   std::vector<TimerEntry> getExpired(TimeStamp now);
+  void reset(std::vector<TimerEntry>& expired, TimeStamp now);
   
   bool insert(Timer* timer);
   

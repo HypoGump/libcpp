@@ -7,7 +7,7 @@
 using namespace libcpp;
 
 // compiling check
-static_assert(sizeof(TimeStamp) == 2*sizeof(int64_t), 
+static_assert(sizeof(TimeStamp) == sizeof(int64_t), 
                 "[Compiling ERROR] Only support 64-bit platform.");
                 
 TimeStamp::TimeStamp()
@@ -22,8 +22,8 @@ TimeStamp::TimeStamp(int64_t microSecondsSinceEpoch)
 std::string TimeStamp::toString() const
 {
     char buf[32] = {0};
-    int64_t sec = microSecondsSinceEpoch / kMicroSecondsPerSecond;
-    int64_t usec = microSecondsSinceEpoch % kMicroSecondsPerSecond;
+    int64_t sec = microSecondsSinceEpoch_ / kMicroSecondsPerSecond;
+    int64_t usec = microSecondsSinceEpoch_ % kMicroSecondsPerSecond;
     snprintf(buf, sizeof(buf)-1, "%" PRId64 ".%06" PRId64 "", sec, usec);
     return buf;
 }

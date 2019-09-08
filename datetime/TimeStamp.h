@@ -20,6 +20,8 @@ public:
         return microSecondsSinceEpoch_; 
     }
     
+    bool valid() const { return microSecondsSinceEpoch_ > 0; }
+    
     static TimeStamp now();
     static TimeStamp invalid() { return TimeStamp(); }
     static const int kMicroSecondsPerSecond = 1000 * 1000;

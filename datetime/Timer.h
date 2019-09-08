@@ -6,7 +6,6 @@
 
 namespace libcpp
 {
-
 typedef std::function<void()> TimerCallback;
 
 class Timer

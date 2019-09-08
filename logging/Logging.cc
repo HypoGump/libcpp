@@ -90,8 +90,11 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
 }
 
 void Logger::Impl::recordFormatTime() {
-  time_t seconds = static_cast<time_t>(timestamp_.seconds());
-  int microseconds = static_cast<int>(timestamp_.useconds());
+  int64_t microSecondsSinceEpoch = timestamp_.microSecondsSinceEpoch();
+  time_t seconds = static_cast<time_t>(microSecondsSinceEpoch 
+                                        / TimeStamp::kMicroSecondsPerSecond);
+  int microseconds = static_cast<int>(microSecondsSinceEpoch 
+                                        % TimeStamp::kMicroSecondsPerSecond);
   
   if (t_seconds != seconds) {
     t_seconds = seconds;
