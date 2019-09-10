@@ -32,7 +32,7 @@ public:
   void disableWriting()
   { events_ &= ~kWriteEvent; update(); }
   
-  void disableAllEvent()
+  void disableAllEvents()
   { events_ = kNoneEvent; update(); }
   
   int fd() const { return fd_; }

@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <thread>
 #include <assert.h>
+#include <execinfo.h>
+#include <signal.h>
 
 using namespace std::chrono;
 
@@ -19,6 +21,48 @@ const char* strerror(int savedErrno) {
   // for thread safe
   return strerror_r(savedErrno, t_errnobuf, sizeof(t_errnobuf));
 }
+
+void handler(int sig) {
+  void *array[16];
+  char** msgs = nullptr;
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 16);
+
+  // print out all the frames to stderr
+  msgs = backtrace_symbols(array, size);
+  fprintf(stderr, "Error: signal %d:\n"
+                "[backtrace] Execution path:\n", sig);
+  
+  for (int i = 0; i < size; ++i) {
+    fprintf(stderr, "#%d %s\n", i, msgs[i]);
+    
+    size_t p = 0;
+    while (msgs[i][p] != '(' && msgs[i][p] != ' '
+            && msgs[i][p] != 0)
+    {
+      ++p;
+    }
+    
+    char syscom[256];
+    ::snprintf(syscom, sizeof syscom, 
+        "addr2line %p -e %.*s", array[i], p, msgs[i]);
+    ::system(syscom);
+  }
+  
+  exit(1);
+}
+
+struct Backtracer
+{
+  Backtracer()
+  {
+    ::signal(SIGSEGV, handler);
+  }
+}
+
+Backtracer tracer;
 
 // config log level
 Logger::LogLevel initLogLevel()

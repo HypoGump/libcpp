@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 #include <assert.h>
+#include <errno.h>
 
 using namespace libcpp;
 
@@ -51,6 +52,41 @@ void TcpConnection::handleRead()
 {
   char buf[65536];
   ssize_t n = ::read(channel_->fd(), buf, sizeof buf);
-  messageCallback_(shared_from_this(), buf, n);
+  if (n > 0) {
+    messageCallback_(shared_from_this(), buf, n);
+  }
+  else if (n == 0) {
+    handleClose();
+  }
+  else {
+    handleError();
+  }
 }
 
+void TcpConnection::handleClose()
+{
+  loop_->assertInLoopThread();
+  LOG_TRACE << "TcpConnection::handleClose [" << name_ << "] "
+            << "state = " << state_;
+  channel_->disableAllEvents();
+  closeCallback_(shared_from_this());
+}
+
+void TcpConnection::handleError()
+{
+  int err = sockets::getSocketError(channel_->fd());
+  errno = err;
+  LOG_ERROR << "TcpConnection::handleError [" << name_
+            << "] - SO_ERROR";
+}
+
+
+void TcpConnection::connectDestroyed()
+{
+  loop_->assertInLoopThread();
+  setConnState(kDisconnected);
+  channel_->disableAllEvents();
+  connectionCallback_(shared_from_this());
+  
+  loop_->removeChannel(channel_.get());
+}

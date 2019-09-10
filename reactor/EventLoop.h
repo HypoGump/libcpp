@@ -36,6 +36,7 @@ public:
    * Internal function: Channel(update) -> EventLoop -> Poller
    */
   void updateChannel(Channel* channel);
+  void removeChannel(Channel* channel);
   
   void assertInLoopThread()
   {

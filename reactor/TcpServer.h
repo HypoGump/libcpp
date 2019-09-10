@@ -28,6 +28,8 @@ public:
   
 private:
   void newConnection(int sockfd, const InetAddress& addr);
+  void removeConnection(const TcpConnPtr& conn);
+  
   typedef std::map<std::string, TcpConnPtr> ConnectionMap;
   
   EventLoop* loop_;

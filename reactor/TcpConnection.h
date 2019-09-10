@@ -20,6 +20,7 @@ typedef std::function<void(const TcpConnPtr&)> ConnectionCallback;
 typedef std::function<void(const TcpConnPtr&,
                             const char* data,
                             ssize_t len)> MessageCallback;
+typedef std::function<void(const TcpConnPtr&)> CloseCallback;
 
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {
@@ -43,12 +44,19 @@ public:
   void setMessageCallback(const MessageCallback& cb)
   { messageCallback_ = cb; }
   
+  void setCloseCallback(const CloseCallback& cb)
+  { closeCallback_ = cb; }
+  
   void connectEstablished();
+  void connectDestroyed();
 
 private:
-  enum ConnState {kConnecting, kConnected};
+  enum ConnState {kConnecting, kConnected, kDisconnected};
   
   void handleRead();
+  void handleWrite();
+  void handleClose();
+  void handleError();
   void setConnState(ConnState s) { state_ = s; }
   
   EventLoop* loop_;
@@ -60,6 +68,7 @@ private:
   InetAddress peerAddr_;
   ConnectionCallback connectionCallback_;
   MessageCallback messageCallback_;
+  CloseCallback closeCallback_;
 };
 
 
