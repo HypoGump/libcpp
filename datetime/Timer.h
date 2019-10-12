@@ -3,10 +3,12 @@
 
 #include "TimeStamp.h"
 #include <functional>
+#include <atomic>
+#include <stdint.h>
 
 namespace libcpp
 {
-typedef std::function<void()> TimerCallback;
+using TimerCallback = std::function<void()>;
 
 class Timer
 {
@@ -15,13 +17,15 @@ public:
     : callback_(cb),
       expiration_(when),
       intervalSeconds_(interval),
-      repeat_(interval > 0.0)
+      repeat_(interval > 0.0),
+      sequence_(s_numCreated_++)
   {
   }
   
   void run() const { callback_(); }
   
   TimeStamp expiration() const { return expiration_; }
+  int64_t sequence() const { return sequence_; }
   bool repeat() const { return repeat_; }
   
   void restart(TimeStamp now);
@@ -30,7 +34,10 @@ private:
   const TimerCallback callback_;
   TimeStamp expiration_;
   const double intervalSeconds_;
-  bool repeat_;
+  const bool repeat_;
+  const int64_t sequence_;
+  
+  static std::atomic<long long> s_numCreated_;
 };
 
 }

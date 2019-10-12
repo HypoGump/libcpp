@@ -2,6 +2,7 @@
 #define LIBCPP_CHANNEL_H_
 
 #include <functional>
+#include "datetime/TimeStamp.h"
 
 namespace libcpp
 {
@@ -10,18 +11,21 @@ class EventLoop;
 class Channel
 {
 public:
-  typedef std::function<void()> EventCallback;
+  using EventCallback = std::function<void()>;
+  using ReadEventCallback = std::function<void(TimeStamp)>;
   
   Channel(EventLoop* loop, int fd);
   
-  void handleEvent();
+  void handleEvent(TimeStamp);
   
-  void setReadCallback(const EventCallback& cb)
+  void setReadCallback(const ReadEventCallback& cb)
   { readCallback_ = cb; }
   void setWriteCallback(const EventCallback& cb)
   { writeCallback_ = cb; }
   void setErrorCallback(const EventCallback& cb)
   { errorCallback_ = cb; }
+  void setCloseCallback(const EventCallback& cb)
+  { closeCallback_ = cb; }
   
   void enableReading()
   { events_ |= kReadEvent; update(); }
@@ -31,6 +35,7 @@ public:
   { events_ |= kWriteEvent; update(); }
   void disableWriting()
   { events_ &= ~kWriteEvent; update(); }
+  bool isWriting() const { return events_ & kWriteEvent; }
   
   void disableAllEvents()
   { events_ = kNoneEvent; update(); }
@@ -57,9 +62,10 @@ private:
   int revents_;
   int index_;
   
-  EventCallback readCallback_;
+  ReadEventCallback readCallback_;
   EventCallback writeCallback_;
   EventCallback errorCallback_;
+  EventCallback closeCallback_;
 };
 
 }

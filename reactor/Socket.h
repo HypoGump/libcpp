@@ -19,6 +19,7 @@ public:
   void listen();
   
   int accept(InetAddress* peerAddr);
+  void shutdownWrite();
   
   void setReuseAddr(bool on);
   
@@ -53,18 +54,25 @@ inline uint32_t hton32(uint32_t host32)
   return ::htonl(host32);
 }
 
+
 int createSockfdNonBlockingOrDie();
+int connect(int sockfd, const struct sockaddr_in& addr);
 void bindOrDie(int sockfd, const struct sockaddr_in& addr);
 void listenOrDie(int sockfd);
 int accept(int sockfd, struct sockaddr_in* addr);
 void close(int sockfd);
+void shutdownWrite(int sockfd);
 
 void fromHostPort(const char* ip, uint16_t port,
                   struct sockaddr_in* addr);
 void toHostPort(char* buf, size_t size, 
                 const struct sockaddr_in& addr);
+
 struct sockaddr_in getLocalAddr(int sockfd);
+struct sockaddr_in getPeerAddr(int sockfd);
+
 int getSocketError(int sockfd);
+bool isSelfConnect(int sockfd);
 }
 
 }

@@ -1,6 +1,6 @@
 #include "EventLoop.h"
 #include "Channel.h"
-#include "Poller.h"
+#include "EPoller.h"
 #include "datetime/TimeStamp.h"
 #include "logging/Logging.h"
 
@@ -36,7 +36,7 @@ EventLoop::EventLoop()
     quit_(false),
     doingPendingFunctors_(false),
     threadId_(std::this_thread::get_id()),
-    poller_(new Poller(this)),
+    poller_(new EPoller(this)),
     timerQueue_(new TimerQueue(this)),
     wakeupFd_(createEventfd()),
     wakeupChannel_(new Channel(this, wakeupFd_))
@@ -99,6 +99,11 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback& cb)
   return timerQueue_->addTimer(cb, time, interval);
 }
 
+void EventLoop::cancel(TimerId timerId)
+{
+  return timerQueue_->cancel(timerId);
+}
+
 void EventLoop::quit()
 {
   quit_ = true;
@@ -116,9 +121,9 @@ void EventLoop::loop()
   
   while (!quit_) {
     activeChannels_.clear();
-    poller_->poll(kPollTimeMs, &activeChannels_);
+    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
     for (auto& channel : activeChannels_) {
-      channel->handleEvent();
+      channel->handleEvent(pollReturnTime_);
     }
     /*
      * Note: don't call doPendingFunctors() in handleWakeup()

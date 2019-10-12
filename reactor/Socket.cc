@@ -38,6 +38,11 @@ int Socket::accept(InetAddress* peerAddr)
 }
 
 
+void Socket::shutdownWrite()
+{
+  sockets::shutdownWrite(sockfd_);
+}
+
 void Socket::setReuseAddr(bool on)
 {
   /* refer to 
@@ -107,6 +112,11 @@ void sockets::listenOrDie(int sockfd)
   }
 }
 
+int sockets::connect(int sockfd, const struct sockaddr_in& addr)
+{
+  return ::connect(sockfd, sockaddr_cast(&addr), sizeof addr);
+}
+
 int sockets::accept(int sockfd, struct sockaddr_in* addr)
 {
   socklen_t addrlen = sizeof(*addr);
@@ -157,11 +167,20 @@ void sockets::close(int sockfd)
   }
 }
 
+void sockets::shutdownWrite(int sockfd)
+{
+  if (::shutdown(sockfd, SHUT_WR) < 0)
+  {
+    LOG_ERROR << "sockets::shutdownWrite";
+  }
+}
+
+
 void sockets::fromHostPort(const char* ip, uint16_t port,
                   struct sockaddr_in* addr)
 {
   addr->sin_family = AF_INET;
-  addr->sin_port = port;
+  addr->sin_port = hton16(port);
   /*
    * int inet_pton(int af, const char *src, void *dst);
    * This function converts the character string src into a network
@@ -205,6 +224,18 @@ struct sockaddr_in sockets::getLocalAddr(int sockfd)
   return localaddr;
 }
 
+struct sockaddr_in sockets::getPeerAddr(int sockfd)
+{
+  struct sockaddr_in peeraddr;
+  bzero(&peeraddr, sizeof peeraddr);
+  socklen_t addrlen = sizeof(peeraddr);
+  if (::getpeername(sockfd, sockaddr_cast(&peeraddr), &addrlen) < 0)
+  {
+    LOG_ERROR << "sockets::getPeerAddr";
+  }
+  return peeraddr;
+}
+
 int sockets::getSocketError(int sockfd)
 {
   int optval;
@@ -216,5 +247,13 @@ int sockets::getSocketError(int sockfd)
   else {
     return optval;
   }
+}
+
+bool sockets::isSelfConnect(int sockfd)
+{
+  struct sockaddr_in localaddr = getLocalAddr(sockfd);
+  struct sockaddr_in peeraddr = getPeerAddr(sockfd);
+  return localaddr.sin_port == peeraddr.sin_port
+      && localaddr.sin_addr.s_addr == peeraddr.sin_addr.s_addr;
 }
 

@@ -1,6 +1,7 @@
 #include "EventLoop.h"
 #include "TcpServer.h"
 #include "Acceptor.h"
+#include "EventLoopGroup.h"
 
 #include "logging/Logging.h"
 
@@ -16,6 +17,7 @@ TcpServer::TcpServer(EventLoop* loop, const InetAddress& addr,
   : loop_(loop),
     name_(name),
     acceptor_(new Acceptor(loop, addr)),
+    loops_(new EventLoopGroup(loop)),
     started_(false),
     nextConnId_(1)
 {
@@ -28,10 +30,17 @@ TcpServer::~TcpServer()
 {
 }
 
+void TcpServer::setThreadNum(int numThreads)
+{
+  assert(numThreads >= 0);
+  loops_->setThreadNum(numThreads);
+}
+
 void TcpServer::start()
 {
   if (!started_) {
     started_ = true;
+    loops_->start();
   }
   
   if (!acceptor_->listening()) {
@@ -52,23 +61,33 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
   
   InetAddress localAddr(sockets::getLocalAddr(sockfd));
   /* create Tcp connection */
-  TcpConnPtr conn = std::make_shared<TcpConnection>(loop_, 
+  EventLoop* ioLoop = loops_->getNextLoop();
+  TcpConnPtr conn = std::make_shared<TcpConnection>(ioLoop, 
                                   connName, sockfd, localAddr, peerAddr);
   connections_[connName] = conn;
   conn->setConnectionCallback(connectionCallback_);
   conn->setMessageCallback(messageCallback_);
   conn->setCloseCallback(std::bind(&TcpServer::removeConnection, this, _1));
-  conn->connectEstablished();
+  
+  ioLoop->runInLoop(
+    std::bind(&TcpConnection::connectEstablished, conn));
 }
 
 
 void TcpServer::removeConnection(const TcpConnPtr& conn)
+{
+  loop_->runInLoop(
+    std::bind(&TcpServer::removeConnectionInLoop, this, conn));
+}
+
+void TcpServer::removeConnectionInLoop(const TcpConnPtr& conn)
 {
   loop_->assertInLoopThread();
   LOG_INFO << "TcpServer::removeConnection [" << name_
            << "] - connection " << conn->name();
   size_t n = connections_.erase(conn->name());
   assert(n == 1); (void)n;
-  loop_->queueInLoop(
+  EventLoop* ioLoop = conn->getLoop();
+  ioLoop->queueInLoop(
       std::bind(&TcpConnection::connectDestroyed, conn));
 }

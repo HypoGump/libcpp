@@ -3,6 +3,7 @@
  */
 #include "reactor/EventLoop.h"
 #include "reactor/Channel.h"
+#include "datetime/TimeStamp.h"
 
 #include <sys/timerfd.h>
 #include <unistd.h>
@@ -13,9 +14,9 @@ using namespace libcpp;
 
 EventLoop* g_loop;
 
-void timeout()
+void timeout(TimeStamp receiveTime)
 {
-  printf("timeout\n");
+  printf("timeout %s\n", receiveTime.toFormattedString().c_str());
   g_loop->quit();
 }
 

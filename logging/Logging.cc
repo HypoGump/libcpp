@@ -5,10 +5,9 @@
 #include <errno.h>
 #include <thread>
 #include <assert.h>
+/* for backtrace */
 #include <execinfo.h>
 #include <signal.h>
-
-using namespace std::chrono;
 
 namespace libcpp
 {
@@ -17,8 +16,7 @@ __thread char t_errnobuf[512];
 __thread char t_time[32];
 __thread time_t t_seconds;
 
-const char* strerror(int savedErrno) {
-  // for thread safe
+const char* strerror_tl(int savedErrno) {
   return strerror_r(savedErrno, t_errnobuf, sizeof(t_errnobuf));
 }
 
@@ -35,8 +33,8 @@ void handler(int sig) {
   fprintf(stderr, "Error: signal %d:\n"
                 "[backtrace] Execution path:\n", sig);
   
-  for (int i = 0; i < size; ++i) {
-    fprintf(stderr, "#%d %s\n", i, msgs[i]);
+  for (size_t i = 0; i < size; ++i) {
+    fprintf(stderr, "#%d %s\n", (int)i, msgs[i]);
     
     size_t p = 0;
     while (msgs[i][p] != '(' && msgs[i][p] != ' '
@@ -47,7 +45,7 @@ void handler(int sig) {
     
     char syscom[256];
     ::snprintf(syscom, sizeof syscom, 
-        "addr2line %p -e %.*s", array[i], p, msgs[i]);
+        "addr2line %p -e %.*s", array[i], (int)p, msgs[i]);
     ::system(syscom);
   }
   
@@ -60,11 +58,11 @@ struct Backtracer
   {
     ::signal(SIGSEGV, handler);
   }
-}
+};
 
 Backtracer tracer;
 
-// config log level
+/* config log level */
 Logger::LogLevel initLogLevel()
 {
   return Logger::TRACE;
@@ -88,7 +86,7 @@ const char* LogLevelName[Logger::NUM_LOG_LEVELS] =
 
 void defaultOutput(const char* msg, int len)
 {
-  // 1 byte a char, len is the number of char
+  /* 1 byte a char, len is the number of char */
   size_t n = ::fwrite(msg, 1, len, stdout);
   assert(n == static_cast<size_t>(len));
   (void)n;
@@ -129,7 +127,7 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
   // record old errno
   if (savedErrno != 0) {
     // libcpp::strerror, not syscall
-    stream_ << strerror(savedErrno) << " (errno=" << savedErrno << ") ";
+    stream_ << strerror_tl(savedErrno) << " (errno=" << savedErrno << ") ";
   }
 }
 
@@ -163,7 +161,8 @@ Logger::Logger(const char* file, const char* func, int line, LogLevel level)
 
 Logger::Logger(const char* file, const char* func, int line, bool toAbort)
   : impl_(toAbort?FATAL:ERROR, errno, file, func, line)
-{}
+{
+}
 
 Logger::~Logger() {
   impl_.stream_ << '\n';

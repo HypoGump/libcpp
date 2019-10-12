@@ -1,3 +1,8 @@
+
+/*
+ * 将 EventLoop 改为无 channel 监听时阻塞？应该可以提高多线程时性能
+ */
+
 #ifndef LIBCPP_EVENTLOOP_H_
 #define LIBCPP_EVENTLOOP_H_
 
@@ -12,12 +17,12 @@
 namespace libcpp
 {
 class Channel;
-class Poller;
+class EPoller;
 
 class EventLoop
 {
 public:
-  typedef std::function<void()> Functor;
+  using Functor = std::function<void()>;
   EventLoop();
   ~EventLoop();
   
@@ -31,6 +36,8 @@ public:
   TimerId runAt(const TimeStamp& time, const TimerCallback& cb);
   TimerId runAfter(double delay, const TimerCallback& cb);
   TimerId runEvery(double interval, const TimerCallback& cb);
+  
+  void cancel(TimerId timerId);
   
   /* 
    * Internal function: Channel(update) -> EventLoop -> Poller
@@ -52,13 +59,14 @@ private:
   void handleWakeup();
   void doPendingFunctors();
   
-  typedef std::vector<Channel*> ChannelList;
+  using ChannelList = std::vector<Channel*>;
   
   bool looping_;
   bool quit_;
   bool doingPendingFunctors_;
   const std::thread::id threadId_;
-  std::unique_ptr<Poller> poller_;
+  TimeStamp pollReturnTime_;
+  std::unique_ptr<EPoller> poller_;
   std::unique_ptr<TimerQueue> timerQueue_;
   ChannelList activeChannels_;
   

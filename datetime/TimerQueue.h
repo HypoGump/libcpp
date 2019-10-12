@@ -6,6 +6,7 @@
 
 #include "reactor/Channel.h"
 
+#include <utility>
 #include <set>
 #include <vector>
 
@@ -20,13 +21,18 @@ public:
   TimerQueue(EventLoop* loop);
   ~TimerQueue();
   
+  void cancel(TimerId timerId);
+  
   TimerId addTimer(const TimerCallback& cb, TimeStamp when, double interval);
   
 private:
-  typedef std::pair<TimeStamp, Timer*> TimerEntry;
-  typedef std::set<TimerEntry> TimerList;
+  using TimerEntry = std::pair<TimeStamp, Timer*>;
+  using TimerList = std::set<TimerEntry>;
+  using ActiveTimer = std::pair<Timer*, int64_t>;
+  using ActiveTimerSet = std::set<ActiveTimer>;
   
   void addTimerInLoop(Timer* timer);
+  void cancelInLoop(TimerId timerId);
   void handleRead();
   std::vector<TimerEntry> getExpired(TimeStamp now);
   void reset(std::vector<TimerEntry>& expired, TimeStamp now);
@@ -37,6 +43,11 @@ private:
   const int timerfd_;
   Channel timerfdChannel_;
   TimerList timers_;
+  
+  // for cancel()
+  bool callingExpiredTimers_;
+  ActiveTimerSet activeTimers_;
+  ActiveTimerSet cancelingTimers_;
 };
 
 }

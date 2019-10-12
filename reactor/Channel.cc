@@ -20,7 +20,7 @@ Channel::Channel(EventLoop* loop, int fd)
 {
 }
 
-void Channel::handleEvent()
+void Channel::handleEvent(TimeStamp receiveTime)
 {
   if (revents_ & POLLNVAL) {
     LOG_WARN << "[Channel] handleEvent() POLLNVAL";
@@ -29,7 +29,7 @@ void Channel::handleEvent()
     if (errorCallback_) errorCallback_();
   }
   if (revents_ & kReadEvent) {
-    if (readCallback_) readCallback_();
+    if (readCallback_) readCallback_(receiveTime);
   }
   if (revents_ & kWriteEvent) {
     if (writeCallback_) writeCallback_();

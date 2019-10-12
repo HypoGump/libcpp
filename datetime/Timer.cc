@@ -2,6 +2,9 @@
 
 using namespace libcpp;
 
+std::atomic<long long> Timer::s_numCreated_;
+
+
 void Timer::restart(TimeStamp now)
 {
   if (repeat_) {

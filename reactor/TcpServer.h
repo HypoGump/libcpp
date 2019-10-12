@@ -10,6 +10,7 @@
 namespace libcpp
 {
 class Acceptor;
+class EventLoopGroup;
 
 class TcpServer
 {
@@ -17,6 +18,8 @@ public:
   TcpServer(EventLoop* loop, const InetAddress& addr, 
               const std::string& name = "TcpServer");
   ~TcpServer();
+  
+  void setThreadNum(int numThreads);
   
   void start();
   
@@ -29,12 +32,14 @@ public:
 private:
   void newConnection(int sockfd, const InetAddress& addr);
   void removeConnection(const TcpConnPtr& conn);
+  void removeConnectionInLoop(const TcpConnPtr& conn);
   
   typedef std::map<std::string, TcpConnPtr> ConnectionMap;
   
   EventLoop* loop_;
   const std::string name_;
   std::unique_ptr<Acceptor> acceptor_;
+  std::unique_ptr<EventLoopGroup> loops_;
   ConnectionCallback connectionCallback_;
   MessageCallback messageCallback_;
   bool started_;

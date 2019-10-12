@@ -1,7 +1,7 @@
 #ifndef LIBCPP_LOGGING_H_
 #define LIBCPP_LOGGING_H_
 
-#include "../datetime/TimeStamp.h"
+#include "datetime/TimeStamp.h"
 #include <sstream>
 #include <functional>
 
@@ -66,6 +66,7 @@ private:
 };
 
 
+const char* strerror_tl(int savedErrno);
 /*
  *  __FILE__: the full path to the source file
  *  __LINE__: the line number of the code
@@ -78,9 +79,14 @@ private:
     libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::INFO).stream()
 #define LOG_WARN \
     libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::WARN).stream()
+
 #define LOG_ERROR \
-    libcpp::Logger(__FILE__, __func__, __LINE__, false).stream()
+    libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::ERROR).stream()
 #define LOG_FATAL \
+    libcpp::Logger(__FILE__, __func__, __LINE__, libcpp::Logger::FATAL).stream()
+#define LOG_SYSERR \
+    libcpp::Logger(__FILE__, __func__, __LINE__, false).stream()
+#define LOG_SYSFATAL \
     libcpp::Logger(__FILE__, __func__, __LINE__, true).stream()
 
 
