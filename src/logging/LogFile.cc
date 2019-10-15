@@ -37,7 +37,7 @@ public:
         int err = ferror(fp_);
         if (err) {
           char buf[128];
-          strerror_r(err, buf, sizeof(buf));
+          (void)strerror_r(err, buf, sizeof(buf));
           fprintf(stderr, "LogFile::File::append() failed %s\n", buf);
         }
         break;

@@ -5,9 +5,50 @@
 #include <string>
 #include <sys/types.h>
 #include <assert.h>
+#include <string.h>
 
 namespace libcpp
 {
+
+const int kSmallBuffer = 4000;
+const int kLargeBuffer = 4000*1000;
+
+template<int SIZE>
+class FixedBuffer
+{
+public:
+  FixedBuffer() : cur_(data_)
+  {}
+
+  ~FixedBuffer()
+  {}
+
+  void append(const char* /*restrict*/ buf, int len)
+  {
+    if (avail() > len) {
+      memcpy(cur_, buf, len);
+      cur_ += len;
+    }
+  }
+
+  const char* data() const { return data_; }
+  int length() const { return cur_ - data_; }
+
+  // write to data_ directly
+  char* current() { return cur_; }
+  int avail() const { return static_cast<int>(end() - cur_); }
+  void add(size_t len) { cur_ += len; }
+
+  void reset() { cur_ = data_; }
+  void bzero() { ::bzero(data_, sizeof data_); }
+
+
+private:
+  const char* end() const { return data_ + sizeof data_; }
+
+  char data_[SIZE];
+  char* cur_;
+};
 
 class Buffer
 {

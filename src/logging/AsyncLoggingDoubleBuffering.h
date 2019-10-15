@@ -1,16 +1,17 @@
 #ifndef LIBCPP_ASYNCLOGGINGDOUBLEBUFFERING_H_
 #define LIBCPP_ASYNCLOGGINGDOUBLEBUFFERING_H_
 
-#include "LogStream.h"
 #include "LogFile.h"
+#include "buffer/Buffer.h"
 
-#include "thread/Mutex.h"
-#include "thread/Condition.h"
-#include "thread/CountDownLatch.h"
-#include "thread/Thread.h"
-
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <future>
 #include <memory>
 #include <vector>
+#include <chrono>
+#include <functional>
 
 namespace libcpp
 {
@@ -18,22 +19,17 @@ namespace libcpp
 class AsyncLoggingDoubleBuffering
 {
 public:
-  typedef FixedBuffer<libcpp::kLargeBuffer> Buffer;
-  typedef std::unique_ptr<Buffer> BufferPtr;
-  typedef std::vector<BufferPtr> BufferVector;
+  using LargeBuffer = FixedBuffer<kLargeBuffer>;
+  using BufferPtr = std::unique_ptr<LargeBuffer>;
+  using BufferVector = std::vector<BufferPtr>;
 
   AsyncLoggingDoubleBuffering(const std::string& basename, size_t rollSize, 
                               int flushInterval = 3)
   : basename_(basename),
     rollSize_(rollSize),
     flushInterval_(flushInterval),
-    mutex_(),
-    cond_(mutex_),
-    latch_(1),
-    thread_(std::bind(&AsyncLoggingDoubleBuffering::threadFunc, this), "Logging"),
-    currentBuffer_(new Buffer),
-    nextBuffer_(new Buffer),
-    buffers_()
+    currentBuffer_(new LargeBuffer),
+    nextBuffer_(new LargeBuffer)
   {
     currentBuffer_->bzero();
     nextBuffer_->bzero();
@@ -46,36 +42,36 @@ public:
   
   void start() {
     running_ = true;
-    thread_.start();
+    thread_ = std::thread(std::bind(&AsyncLoggingDoubleBuffering::threadFunc, this));
     // must wait until threadFunc run
-    latch_.wait();
+    oneShot_.get_future().wait();
   }
   
   void stop() {
     running_ = false;
-    cond_.notify(); // notify what? 
+    cond_.notify_one();
     thread_.join();
   }
   
   // bind to logger's outputFunc
   void append(const char* logline, int len) 
   {
-    libcpp::MutexLockGuard lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     if (currentBuffer_->avail() > len) {
       currentBuffer_->append(logline, len);
     }
     else {
-      buffers_.push_back(BufferPtr(currentBuffer_.release()));
+      buffers_.emplace_back(currentBuffer_.release());
       if (nextBuffer_) {
         currentBuffer_ = std::move(nextBuffer_);
       }
       else {
-        currentBuffer_.reset(new Buffer);
+        currentBuffer_.reset(new LargeBuffer);
       }
       currentBuffer_->append(logline, len);
       
       // notify backend there have filled buffer to save
-      cond_.notify();
+      cond_.notify_one();
     }
   }
     
@@ -83,11 +79,11 @@ private:
   // backend, write to file
   void threadFunc() 
   {
-    latch_.countDown();
+    oneShot_.set_value();
     
     LogFile output(basename_, rollSize_, false);
-    BufferPtr newBuffer1(new Buffer);
-    BufferPtr newBuffer2(new Buffer);
+    BufferPtr newBuffer1(new LargeBuffer);
+    BufferPtr newBuffer2(new LargeBuffer);
     newBuffer1->bzero();
     newBuffer2->bzero();
     
@@ -96,12 +92,12 @@ private:
     
     while (running_) {
       { // critical zone
-        libcpp::MutexLockGuard lock(mutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
         if (buffers_.empty()) {
-          cond_.waitUntilTimeout(flushInterval_); // block
+          cond_.wait_for(lock, std::chrono::seconds(flushInterval_));
         }
         // change ownership, not copy
-        buffers_.push_back(BufferPtr(currentBuffer_.release()));
+        buffers_.emplace_back(currentBuffer_.release());
         currentBuffer_ = std::move(newBuffer1);
         buffersToWrite.swap(buffers_);
         if (!nextBuffer_) nextBuffer_ = std::move(newBuffer2);
@@ -115,8 +111,8 @@ private:
       buffersToWrite.clear();
         
       // refill newBuffer
-      BufferPtr newBuffer1(new Buffer);
-      BufferPtr newBuffer2(new Buffer);
+      BufferPtr newBuffer1(new LargeBuffer);
+      BufferPtr newBuffer2(new LargeBuffer);
       newBuffer1->bzero();
       newBuffer2->bzero();
       
@@ -131,12 +127,10 @@ private:
   size_t rollSize_;
   const int flushInterval_;
   
-  Mutex mutex_;
-  Condition cond_;
-  Thread thread_;  // FIXME: std::thread?
-  
-  // make sure backend start before logger
-  CountDownLatch latch_;
+  std::mutex mutex_;
+  std::condition_variable cond_;
+  std::thread thread_;
+  std::promise<void> oneShot_;
   
   BufferPtr currentBuffer_;
   BufferPtr nextBuffer_;

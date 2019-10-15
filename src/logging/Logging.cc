@@ -46,7 +46,7 @@ void handler(int sig) {
     char syscom[256];
     ::snprintf(syscom, sizeof syscom, 
         "addr2line %p -e %.*s", array[i], (int)p, msgs[i]);
-    ::system(syscom);
+    (void)::system(syscom);
   }
   
   exit(1);
@@ -73,6 +73,18 @@ Logger::LogLevel initLogLevel()
 }
 
 Logger::LogLevel g_logLevel = initLogLevel();
+
+const char* LogLevelColor[Logger::NUM_LOG_LEVELS] = 
+{
+  "\033[1;37m",     /* TRACE - WHITE */
+  "\033[0;36m",     /* DEBUG - CYAN */
+  "\033[0;32;32m",  /* INFO - GREEN */
+  "\033[1;33m",     /* WARN - YELLOW */
+  "\033[0;35m",     /* ERROR - PURPLE */
+  "\033[0;32;31m",  /* FATAL - RED */
+};
+
+const char* EndColor = "\033[m";
 
 const char* LogLevelName[Logger::NUM_LOG_LEVELS] =
 {
@@ -121,9 +133,9 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
   // record ThreadId
   stream_ << std::this_thread::get_id() << ' ';
   // record LogLevel
-  stream_ << std::string(LogLevelName[level_]);
+  stream_ << LogLevelColor[level_] << LogLevelName[level_] << EndColor;
   // record file/func:line 
-  stream_ << basename_ << " - " << func_ << ':' << line_ << ' ';
+  stream_ << basename_ << "/" << func_ << ':' << line_ << ' ';
   // record old errno
   if (savedErrno != 0) {
     // libcpp::strerror, not syscall

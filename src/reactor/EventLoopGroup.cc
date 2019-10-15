@@ -24,6 +24,7 @@ void EventLoopGroup::start()
   if (!started_) {
     started_ = true;
     for (int i = 0; i < numThreads_; ++i) {
+      // FIXME: use lambda to remove EventLoopThread
       EventLoopThreadPtr t(new EventLoopThread);
       loops_.push_back(t->startLoop());
       threads_.emplace_back(std::move(t));

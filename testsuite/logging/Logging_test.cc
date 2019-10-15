@@ -1,5 +1,5 @@
-#include "../Logging.h"
-#include "../LogFile.h"
+#include "logging/Logging.h"
+#include "logging/LogFile.h"
 
 #include <stdio.h>
 #include <sys/types.h>

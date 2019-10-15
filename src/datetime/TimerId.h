@@ -1,6 +1,8 @@
 #ifndef LIBCPP_TIMER_ID_H_
 #define LIBCPP_TIMER_ID_H_
 
+#include <stdint.h>
+
 namespace libcpp
 {
   

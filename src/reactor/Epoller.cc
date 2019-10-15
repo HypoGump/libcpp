@@ -99,6 +99,7 @@ void EPoller::updateChannel(Channel* channel)
     else {
       /* kDeleted means it is in channels_, but not in listen list */
     }
+    channel->set_index(kAdded);
     update(EPOLL_CTL_ADD, channel);
   }
   else {

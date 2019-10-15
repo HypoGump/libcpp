@@ -1,7 +1,7 @@
 #include "TcpConnection.h"
-#include "EventLoop.h"
+#include "reactor/EventLoop.h"
 #include "Socket.h"
-#include "Channel.h"
+#include "reactor/Channel.h"
 
 #include "logging/Logging.h"
 

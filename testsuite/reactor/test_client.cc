@@ -41,7 +41,7 @@ void onMessage(const libcpp::TcpConnPtr& conn,
 int main()
 {
   libcpp::EventLoop loop;
-  libcpp::InetAddress serverAddr("219.223.189.207", 9981);
+  libcpp::InetAddress serverAddr("localhost", 9981);
   libcpp::TcpClient client(&loop, serverAddr);
 
   client.setConnectionCallback(onConnection);

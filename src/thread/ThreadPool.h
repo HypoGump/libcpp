@@ -47,9 +47,9 @@ inline ThreadPool::ThreadPool(size_t threadNum)
               // Note: don't use lock_guard, as condition need lock()/unlock() operation
               //        while lock_guard doesn't provide them
               std::unique_lock<std::mutex> lock(this->queueMutex_);
-              this->cond_.wait(lock, [this]{ return this->stop_ || !tasks.empty() });
+              this->cond_.wait(lock, [this]{ return this->stop_ || !tasks_.empty() });
               
-              if (stop_ && tasks.empty()) return;
+              if (stop_ && tasks_.empty()) return;
               
               task = std::move(this->tasks_.front());
               this->tasks_.pop();
