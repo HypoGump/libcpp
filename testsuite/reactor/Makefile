@@ -1,9 +1,9 @@
 CC := g++
-CXXFALGS := -g -Wall -I ../.. -std=c++11 -pthread
+CXXFALGS := -g -Wall -I ../../src/ -std=c++11 -pthread
 
-DIRS := $(shell ls -l ../../ | grep ^d | awk '{print $$9}')
-LIBSRC := $(foreach dir, $(DIRS), $(wildcard ../../$(dir)/*.cc))
-HEADERS := $(foreach dir, $(DIRS), $(wildcard ../../$(dir)/*.h))
+DIRS := $(shell ls -l ../../src/ | grep ^d | awk '{print $$9}')
+LIBSRC := $(foreach dir, $(DIRS), $(wildcard ../../src/$(dir)/*.cc))
+HEADERS := $(foreach dir, $(DIRS), $(wildcard ../../src/$(dir)/*.h))
 
 TARGETS := test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 \
             test_client

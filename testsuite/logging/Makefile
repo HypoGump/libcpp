@@ -1,5 +1,5 @@
 CC := g++
-CXXFALGS := -g -Wall -I ../../src/ -std=c++11 -pthread -O0
+CXXFALGS := -g -Wall -I ../../src/ -std=c++11 -pthread -O2
 DIRS := $(filter buffer logging, $(shell ls -l ../../src/ | grep ^d | awk '{print $$9}'))
 LIBSRC := $(foreach dir, $(DIRS), $(wildcard ../../src/$(dir)/*.cc)) ../../src/datetime/TimeStamp.cc
 HEADERS := $(foreach dir, $(DIRS), $(wildcard ../../src/$(dir)/*.h)) ../../src/datetime/TimeStamp.h

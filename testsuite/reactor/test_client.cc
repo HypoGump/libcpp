@@ -1,6 +1,6 @@
 #include "reactor/EventLoop.h"
-#include "reactor/InetAddress.h"
-#include "reactor/TcpClient.h"
+#include "net/InetAddress.h"
+#include "net/TcpClient.h"
 #include "logging/Logging.h"
 
 #include <utility>

@@ -1,8 +1,3 @@
-
-/*
- * 将 EventLoop 改为无 channel 监听时阻塞？应该可以提高多线程时性能
- */
-
 #ifndef LIBCPP_EVENTLOOP_H_
 #define LIBCPP_EVENTLOOP_H_
 

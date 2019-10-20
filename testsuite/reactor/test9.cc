@@ -1,6 +1,6 @@
-#include "reactor/TcpServer.h"
+#include "net/TcpServer.h"
 #include "reactor/EventLoop.h"
-#include "reactor/InetAddress.h"
+#include "net/InetAddress.h"
 #include <stdio.h>
 #include <unistd.h>
 

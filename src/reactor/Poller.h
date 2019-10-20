@@ -21,7 +21,7 @@ class Channel;
 class Poller
 {
 public:
-  typedef std::vector<Channel*> ChannelList;
+  using ChannelList = std::vector<Channel*>;
   
   Poller(EventLoop* loop);
   TimeStamp poll(int timeoutMs, ChannelList* activeChannels);
@@ -34,8 +34,8 @@ public:
 private:
   void fillActiveChannels(int activeNums, ChannelList* activeChannels);
   
-  typedef std::vector<struct pollfd> PollfdList;
-  typedef std::map<int, Channel*> ChannelMap;
+  using PollfdList = std::vector<struct pollfd>;
+  using ChannelMap = std::map<int, Channel*>;
   
   EventLoop* ownerLoop_;
   PollfdList pollfds_;

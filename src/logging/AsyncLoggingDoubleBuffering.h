@@ -2,7 +2,7 @@
 #define LIBCPP_ASYNCLOGGINGDOUBLEBUFFERING_H_
 
 #include "LogFile.h"
-#include "buffer/Buffer.h"
+#include "io/Buffer.h"
 
 #include <thread>
 #include <mutex>

@@ -135,7 +135,7 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
   // record LogLevel
   stream_ << LogLevelColor[level_] << LogLevelName[level_] << EndColor;
   // record file/func:line 
-  stream_ << basename_ << "/" << func_ << ':' << line_ << ' ';
+  stream_ << basename_ << "/" << func_ << ':' << line_ << " - ";
   // record old errno
   if (savedErrno != 0) {
     // libcpp::strerror, not syscall

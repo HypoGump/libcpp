@@ -2,6 +2,7 @@
 #include "EventLoop.h"
 
 #include <functional>
+#include <future>
 
 using namespace libcpp;
 
@@ -24,10 +25,17 @@ void EventLoopGroup::start()
   if (!started_) {
     started_ = true;
     for (int i = 0; i < numThreads_; ++i) {
-      // FIXME: use lambda to remove EventLoopThread
-      EventLoopThreadPtr t(new EventLoopThread);
-      loops_.push_back(t->startLoop());
-      threads_.emplace_back(std::move(t));
+      std::promise<EventLoop*> p;
+      
+      threads_.emplace_back(
+        [&p]()
+        {
+          EventLoop loop;
+          p.set_value(&loop);
+          loop.loop();
+        });
+      
+      loops_.push_back(p.get_future().get());
     }
   }
 }

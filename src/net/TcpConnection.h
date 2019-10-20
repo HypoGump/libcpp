@@ -2,7 +2,7 @@
 #define LIBCPP_REACTOR_TCPCONNECTION_H_
 
 #include "InetAddress.h"
-#include "Buffer.h"
+#include "io/Buffer.h"
 #include "datetime/TimeStamp.h"
 
 #include <map>
@@ -17,13 +17,13 @@ class TcpConnection;
 class Socket;
 class Channel;
 
-using TcpConnPtr = std::shared_ptr<TcpConnection>;
-using ConnectionCallback = std::function<void(const TcpConnPtr&)>;
-using MessageCallback = std::function<void(const TcpConnPtr&,
+using TcpConnSptr = std::shared_ptr<TcpConnection>;
+using ConnectionCallback = std::function<void(const TcpConnSptr&)>;
+using MessageCallback = std::function<void(const TcpConnSptr&,
                             Buffer*,
                             TimeStamp)>;
-using CloseCallback = std::function<void(const TcpConnPtr&)>;
-using WriteCompleteCallback = std::function<void(const TcpConnPtr&)>;
+using CloseCallback = std::function<void(const TcpConnSptr&)>;
+using WriteCompleteCallback = std::function<void(const TcpConnSptr&)>;
 
 class TcpConnection : public std::enable_shared_from_this<TcpConnection>
 {

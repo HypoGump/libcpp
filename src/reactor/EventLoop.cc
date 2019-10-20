@@ -8,12 +8,26 @@
 #include <poll.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
+#include <signal.h>
 
 using namespace libcpp;
 
 __thread EventLoop* t_loopInThisThread = nullptr;
-
 static const int kPollTimeMs = 10000;
+
+/*
+ * SIGPIPE's default operation is terminating process
+ * we need to ignore it at the beginning
+ */
+class IgnoreSigpipe
+{
+public:
+  IgnoreSigpipe() {
+    ::signal(SIGPIPE, SIG_IGN);
+  }
+};
+
+IgnoreSigpipe initObj;
 
 static int createEventfd()
 {

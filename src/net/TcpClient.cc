@@ -12,7 +12,7 @@ namespace libcpp
 namespace detail
 {
 
-void removeConnection(EventLoop* loop, const TcpConnPtr& conn)
+void removeConnection(EventLoop* loop, const TcpConnSptr& conn)
 {
   loop->queueInLoop(std::bind(&TcpConnection::connectDestroyed, conn));
 }
@@ -46,7 +46,7 @@ TcpClient::~TcpClient()
 {
   LOG_INFO << "TcpClient::~TcpClient[" << this
            << "] - connector " << connector_.get();
-  TcpConnPtr conn;
+  TcpConnSptr conn;
   {
     std::lock_guard<std::mutex> lock(mutex_);
     conn = connection_;
@@ -103,7 +103,7 @@ void TcpClient::newConnection(int sockfd)
   std::string connName = buf;
   
   InetAddress localAddr(sockets::getLocalAddr(sockfd));
-  TcpConnPtr conn(new TcpConnection(loop_, 
+  TcpConnSptr conn(new TcpConnection(loop_, 
                                    connName,
                                    sockfd,
                                    localAddr,
@@ -124,7 +124,7 @@ void TcpClient::newConnection(int sockfd)
   conn->connectEstablished();
 }
 
-void TcpClient::removeConnection(const TcpConnPtr& conn)
+void TcpClient::removeConnection(const TcpConnSptr& conn)
 {
   loop_->assertInLoopThread();
   assert(loop_ == conn->getLoop());

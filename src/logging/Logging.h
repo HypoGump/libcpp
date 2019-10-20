@@ -40,16 +40,16 @@ public:
   
   std::ostringstream& stream() { return impl_.stream_; }
   
-  typedef std::function<void(const char*, int)> OutputFunc;
-  typedef std::function<void()> FlushFunc;
+  using OutputFunc = std::function<void(const char*, int)>;
+  using FlushFunc = std::function<void()>;
   static void setOutputFunc(OutputFunc);
   static void setFlushFunc(FlushFunc);
     
 private:
   class Impl
   {
-   public:
-    typedef Logger::LogLevel LogLevel;
+  public:
+    using LogLevel = Logger::LogLevel;
     Impl(LogLevel level, int savedErrno, const char* file, const char* func, int line);
     void recordFormatTime();
     

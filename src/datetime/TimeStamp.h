@@ -54,4 +54,4 @@ inline TimeStamp addTime(TimeStamp time, double seconds)
 
 } // libcpp
 
-#endif // libcpp_TimeStamp_H_
+#endif

@@ -31,10 +31,10 @@ public:
   
 private:
   void newConnection(int sockfd, const InetAddress& addr);
-  void removeConnection(const TcpConnPtr& conn);
-  void removeConnectionInLoop(const TcpConnPtr& conn);
+  void removeConnection(const TcpConnSptr& conn);
+  void removeConnectionInLoop(const TcpConnSptr& conn);
   
-  typedef std::map<std::string, TcpConnPtr> ConnectionMap;
+  typedef std::map<std::string, TcpConnSptr> ConnectionMap;
   
   EventLoop* loop_;
   const std::string name_;

@@ -62,7 +62,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
   InetAddress localAddr(sockets::getLocalAddr(sockfd));
   /* create Tcp connection */
   EventLoop* ioLoop = loops_->getNextLoop();
-  TcpConnPtr conn = std::make_shared<TcpConnection>(ioLoop, 
+  TcpConnSptr conn = std::make_shared<TcpConnection>(ioLoop, 
                                   connName, sockfd, localAddr, peerAddr);
   connections_[connName] = conn;
   conn->setConnectionCallback(connectionCallback_);
@@ -74,13 +74,13 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 }
 
 
-void TcpServer::removeConnection(const TcpConnPtr& conn)
+void TcpServer::removeConnection(const TcpConnSptr& conn)
 {
   loop_->runInLoop(
     std::bind(&TcpServer::removeConnectionInLoop, this, conn));
 }
 
-void TcpServer::removeConnectionInLoop(const TcpConnPtr& conn)
+void TcpServer::removeConnectionInLoop(const TcpConnSptr& conn)
 {
   loop_->assertInLoopThread();
   LOG_INFO << "TcpServer::removeConnection [" << name_

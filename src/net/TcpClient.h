@@ -20,7 +20,7 @@ public:
   void stop();
   
   // for what?
-  TcpConnPtr connection() const 
+  TcpConnSptr connection() const 
   {
     std::lock_guard<std::mutex> lock(mutex_);
     return connection_;
@@ -40,7 +40,7 @@ public:
   
 private:
   void newConnection(int sockfd);
-  void removeConnection(const TcpConnPtr& conn);
+  void removeConnection(const TcpConnSptr& conn);
   
   EventLoop* loop_;
   ConnectorPtr connector_;  // why not unique_ptr?
@@ -53,7 +53,7 @@ private:
   
   int nextConnId_;
   mutable std::mutex mutex_;
-  TcpConnPtr connection_;
+  TcpConnSptr connection_;
 };
 
 }

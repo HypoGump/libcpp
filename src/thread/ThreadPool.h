@@ -7,6 +7,7 @@
 #include <vector>
 #include <queue>
 #include <functional>
+#include <future>
 
 namespace libcpp
 {
