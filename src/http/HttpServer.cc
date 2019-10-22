@@ -35,13 +35,12 @@ void HttpServer::onConnection(const TcpConnSptr& conn)
 {
   if (conn->connected())
   {
-    sessions_[conn] = new HttpSession(conn);
+    sessions_[conn] = make_unique<HttpSession>(conn, HTTP_REQUEST);
     LOG_TRACE << "connection established";
   }
   else
   {
     LOG_TRACE << "connection down";
-    delete sessions_[conn];
     sessions_.erase(conn);
   }
 }
@@ -49,7 +48,7 @@ void HttpServer::onConnection(const TcpConnSptr& conn)
 void HttpServer::onMessage(const TcpConnSptr& conn, 
                           Buffer* buf, TimeStamp receivedTime)
 {
-  HttpSession *session = sessions_[conn];
+  HttpSession *session = sessions_[conn].get();
   session->execute(buf->data(), buf->readableBytes());
 }
 

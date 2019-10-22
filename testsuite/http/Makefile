@@ -5,11 +5,11 @@ DIRS := $(filter-out thread, $(shell ls -l ../../src/ | grep ^d | awk '{print $$
 LIBSRC := $(foreach dir, $(DIRS), $(wildcard ../../src/$(dir)/*.cc)) ../../src/http/http_parser.c
 HEADERS := $(foreach dir, $(DIRS), $(wildcard ../../src/$(dir)/*.h))
 
-TARGETS = HttpSession_test
+TARGETS = HttpParser_test
 
 all: $(TARGETS)
 
-HttpSession_test: HttpSession_test.cc $(LIBSRC) $(HEADERS)  
+HttpParser_test: HttpParser_test.cc $(LIBSRC) $(HEADERS)  
 	@$(CC) $^ -o $@ $(CXXFALGS)
 	
 clean:

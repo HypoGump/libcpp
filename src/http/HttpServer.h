@@ -6,6 +6,7 @@
 #include "net/TcpServer.h"
 #include "HttpSession.h"
 
+#include "utils/ModernCpp.h"
 #include <map>
 #include <string>
 
@@ -29,10 +30,13 @@ public:
   void onMessage(const TcpConnSptr&, Buffer*, TimeStamp);
   
 private:
-  using SessionMap = std::map<TcpConnSptr, HttpSession*>;
+  using HttpSessionUptr = std::unique_ptr<HttpSession>;
+  using SessionMap = std::map<TcpConnSptr, HttpSessionUptr>;
   
   TcpServer tcpServer_;
   SessionMap sessions_;
+  
+  /* what callback should be provided by users? */
 };
 
 }
