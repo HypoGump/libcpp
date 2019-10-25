@@ -38,7 +38,8 @@ public:
   static LogLevel logLevel();
   static void setLogLevel(LogLevel level);
   
-  std::ostringstream& stream() { return impl_.stream_; }
+  //std::ostringstream& stream() { return impl_.stream_; }
+  std::ostringstream& stream();
   
   using OutputFunc = std::function<void(const char*, int)>;
   using FlushFunc = std::function<void()>;
@@ -54,7 +55,7 @@ private:
     void recordFormatTime();
     
     TimeStamp timestamp_;
-    std::ostringstream stream_;
+    //std::ostringstream stream_;
     LogLevel level_;
     int line_;
     const char* func_;

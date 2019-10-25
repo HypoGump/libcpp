@@ -15,6 +15,7 @@ namespace libcpp
 __thread char t_errnobuf[512];
 __thread char t_time[32];
 __thread time_t t_seconds;
+thread_local std::ostringstream stream_;
 
 const char* strerror_tl(int savedErrno) {
   return strerror_r(savedErrno, t_errnobuf, sizeof(t_errnobuf));
@@ -119,7 +120,6 @@ using namespace libcpp;
 
 Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char* func, int line) 
   : timestamp_(TimeStamp::now()),
-    stream_(),
     level_(level),
     line_(line),
     func_(func),
@@ -176,9 +176,21 @@ Logger::Logger(const char* file, const char* func, int line, bool toAbort)
 {
 }
 
+
+/* TEST */
+
+std::ostringstream& Logger::stream() 
+{
+  return stream_;
+}
+
+
 Logger::~Logger() {
-  impl_.stream_ << '\n';
-  std::string buf = impl_.stream_.str();
+  //impl_.stream_ << '\n';
+  //std::string buf = impl_.stream_.str();
+  stream_ << '\n';
+  std::string buf = stream_.str();
+  stream_.str("");
   g_output(buf.c_str(), buf.size());
   if (impl_.level_ == FATAL) {
     g_flush();

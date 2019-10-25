@@ -5,7 +5,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <functional>
-#include <chrono>
+#include <sys/time.h>
+#include <time.h>
 
 using std::string;
 
@@ -30,7 +31,6 @@ void bench()
 {
   //libcpp::Logger::OutputFunc output = dummyOutput;
   libcpp::Logger::setOutputFunc(dummyOutput);
-  auto start = std::chrono::steady_clock::now();
   g_total = 0;
 
   const int batch = 1000*1000;
@@ -38,16 +38,21 @@ void bench()
   string empty = " ";
   string longStr(3000, 'X');
   longStr += " ";
-
+  
+  // start
+  struct timeval start;
+  gettimeofday(&start, NULL);
   for (int i = 0; i < batch; ++i)
   {
     LOG_INFO << "Hello 0123456789" << " abcdefghijklmnopqrstuvwxyz "
              << (kLongLog ? longStr : empty)
              << i;
   }
-  auto end = std::chrono::steady_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end-start);
-  double seconds = static_cast<double>(duration.count()/1000/1000);
+  struct timeval end;
+  gettimeofday(&end, NULL);
+  // end
+  time_t usenconds = (end.tv_sec * 1000 * 1000 + end.tv_usec) - (start.tv_sec * 1000 * 1000 + start.tv_usec);
+  double seconds = (double)usenconds/(1000*1000);
   printf("%f seconds, %ld bytes, %.2f msg/s, %.2f MiB/s\n",
          seconds, g_total, batch / seconds, g_total / seconds / 1024 / 1024);
 }

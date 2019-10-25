@@ -10,6 +10,7 @@ extern "C"
 #include "net/TcpConnection.h"
 
 #include <memory>
+#include <map>
 
 namespace libcpp
 {
@@ -55,6 +56,8 @@ private:
   http_parser parser_;
   std::string curField_;
   std::string curValue_;
+  std::map<std::string, std::string> headers_;
+  bool lastIsValue_;
 };
 
 }

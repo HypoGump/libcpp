@@ -25,7 +25,10 @@ public:
   
   void start();
   void stop();
+  
+  
 
+private:
   void onConnection(const TcpConnSptr& conn);
   void onMessage(const TcpConnSptr&, Buffer*, TimeStamp);
   

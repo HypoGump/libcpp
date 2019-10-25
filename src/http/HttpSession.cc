@@ -135,6 +135,10 @@ size_t HttpSession::execute(const char *buf , size_t length)
 int HttpSession::onMessageBegin()
 {
   LOG_TRACE << "Message Begin";
+  curField_.clear();
+  curValue_.clear();
+  headers_.clear();
+  lastIsValue_ = true;
   return 0;
 }
 
@@ -146,19 +150,33 @@ int HttpSession::onUrl(const char* at, size_t length)
 
 int HttpSession::onStatus(const char* at, size_t length)
 {
-  LOG_TRACE << "status";
+  LOG_TRACE << std::string(at, length);
   return 0;
 }
 
 int HttpSession::onHeaderField(const char* at, size_t length)
 {
   LOG_TRACE << std::string(at, length);
+  
+  if (lastIsValue_) {
+    if (!curField_.empty()) {
+      // FIXME: here maybe process field-value pair immediately
+      headers_[curField_] = curValue_;
+    }
+    curField_.clear();
+    curValue_.clear();
+  }
+  
+  curField_.append(at, length);
+  lastIsValue_ = false;
   return 0;
 }
 
 int HttpSession::onHeaderValue(const char* at, size_t length)
 {
   LOG_TRACE << std::string(at, length);
+  curValue_.append(at, length);
+  lastIsValue_ = true;
   return 0;
 }
 
@@ -170,13 +188,15 @@ int HttpSession::onHeadersComplete()
 
 int HttpSession::onBody(const char* at, size_t length)
 {
-  LOG_TRACE << std::string(at, length);
+  LOG_TRACE << "on body";
+  /* callback to process body */
   return 0;
 }
 
 int HttpSession::onMessageComplete()
 {
   LOG_TRACE << "Message Complete";
+  /* response */
   return 0;
 }
 
