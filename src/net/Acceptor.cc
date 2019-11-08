@@ -7,7 +7,7 @@ using namespace libcpp;
 
 Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr)
   : loop_(loop),
-    acceptSocket_(sockets::createSockfdNonBlockingOrDie()),
+    acceptSocket_(sockets::createSockfdNonBlockingOrDie(sockets::SOCK_TYPE_TCP)),
     acceptChannel_(loop, acceptSocket_.fd()),
     listening_(false)
 {

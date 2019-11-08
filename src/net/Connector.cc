@@ -49,7 +49,7 @@ void Connector::startInLoop()
 
 void Connector::connect()
 {
-  int sockfd = sockets::createSockfdNonBlockingOrDie();
+  int sockfd = sockets::createSockfdNonBlockingOrDie(sockets::SOCK_TYPE_TCP);
   int ret = sockets::connect(sockfd, serverAddr_.getSockAddrInet());
   int savedErrno = (ret == 0) ? 0 : errno;
   switch (savedErrno) {

@@ -72,15 +72,24 @@ SA* sockaddr_cast(struct sockaddr_in* addr)
 
 }
 
-int sockets::createSockfdNonBlockingOrDie()
+int sockets::createSockfdNonBlockingOrDie(Protocol pro)
 {
   /*
    * refer to http://man7.org/linux/man-pages/man2/socket.2.html
    * int socket(int domain, int type, int protocol);
    */
-  int sockfd = ::socket(AF_INET,
-                        SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
-                        IPPROTO_TCP);
+  int sockfd;
+  if (pro == SOCK_TYPE_TCP) {
+    sockfd = ::socket(AF_INET,
+                    SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
+                    IPPROTO_TCP);
+  }
+  else {
+    sockfd = ::socket(AF_INET,
+                    SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
+                    0);
+  }
+  
   if (sockfd < 0) {
     LOG_FATAL << "sockets::createSockfdNonBlockingOrDie";
   }

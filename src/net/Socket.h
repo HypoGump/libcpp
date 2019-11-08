@@ -54,8 +54,14 @@ inline uint32_t hton32(uint32_t host32)
   return ::htonl(host32);
 }
 
+enum Protocol
+{
+  SOCK_TYPE_TCP,
+  SOCK_TYPE_UDP
+};
 
-int createSockfdNonBlockingOrDie();
+/* create tcp/udp socket */
+int createSockfdNonBlockingOrDie(Protocol pro);
 int connect(int sockfd, const struct sockaddr_in& addr);
 void bindOrDie(int sockfd, const struct sockaddr_in& addr);
 void listenOrDie(int sockfd);
