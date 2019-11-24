@@ -17,14 +17,14 @@ class EventLoop;
 class UdpClient : public utils::noncopyable
 {
 public:
-  using MessageCallback = std::function<void(const InetAddress&, Buffer*, TimeStamp)>;
+  using MessageCallback = std::function<void(Buffer*, TimeStamp)>;
   using RunCallback = std::function<void()>;
   
   UdpClient(EventLoop* loop, const InetAddress& serverAddr);
   ~UdpClient();
 
   void start();
-  void sendto(const std::string& msg, const InetAddress& peerAddr);
+  void send(const std::string& msg);
 
   void setRunCallback(const RunCallback& cb) 
   { runCallback_ = cb; }

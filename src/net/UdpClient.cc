@@ -32,17 +32,17 @@ void UdpClient::start()
 }
 
 
-void UdpClient::sendto(const std::string& msg, const InetAddress& peerAddr)
+void UdpClient::send(const std::string& msg)
 {
-  LOG_TRACE << peerAddr.toHostPort() << " " << msg;
+  LOG_TRACE << serverAddr_.toHostPort() << " " << msg;
   /*
    * ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
    *            const struct sockaddr *dest_addr, socklen_t addrlen);
    */
   // FIXME : if send more data than peer can receive?
   ssize_t n = ::sendto(udpSocket_.fd(), msg.data(), msg.size(), 0,
-                      (const struct sockaddr*) &peerAddr.getSockAddrInet(), 
-                      sizeof peerAddr);
+                      (const struct sockaddr*) &serverAddr_.getSockAddrInet(), 
+                      sizeof serverAddr_);
   if (n >= 0) {
     if (static_cast<size_t>(n) < msg.size()) {
       LOG_TRACE << "[UdpServer] There is more data to be sent";
@@ -64,13 +64,12 @@ void UdpClient::handleRead(TimeStamp receivedTime)
   const size_t writable = inputBuffer_.writableBytes();
   const ssize_t n = ::recvfrom(udpSocket_.fd(), inputBuffer_.beginWrite(), writable, 
                               MSG_WAITALL, (struct sockaddr*) &addr, &addrLen);
-  InetAddress peerAddr(addr);
   
   if (n < 0) {
     LOG_SYSERR << "[UdpClient] handleRead error";
   } else if (static_cast<size_t>(n) <= writable) {
     inputBuffer_.hasWritten(n);
-    messageCallback_(peerAddr, &inputBuffer_, receivedTime);
+    messageCallback_(&inputBuffer_, receivedTime);
   }
 }
 

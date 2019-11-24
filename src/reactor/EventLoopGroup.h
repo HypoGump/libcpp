@@ -18,6 +18,7 @@ public:
   void setThreadNum(int num) { numThreads_ = num; }
   void start();
   EventLoop* getNextLoop();
+  int getLoopNum() const { return numThreads_; }
   
 private:
   EventLoop* baseLoop_;

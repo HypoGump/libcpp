@@ -10,6 +10,7 @@
 namespace libcpp
 {
 
+const int kPacketBuffer = 1500;
 const int kSmallBuffer = 4000;
 const int kLargeBuffer = 4000*1000;
 
@@ -42,6 +43,7 @@ public:
   void reset() { cur_ = data_; }
   void bzero() { ::bzero(data_, sizeof data_); }
 
+  std::string string() { return std::string(data(), length()); }
 
 private:
   const char* end() const { return data_ + sizeof data_; }
@@ -132,14 +134,7 @@ public:
   { writerIndex_ += len; }
   
   ssize_t readFd(int fd, int* savedErrno);
-  
-private:
-  char* begin()
-  { return &*buffer_.begin(); }
-  
-  const char* begin() const
-  { return &*buffer_.begin(); }
-  
+
   void makeSpace(size_t len)
   {
     if (writableBytes() + prependableBytes() < len + kCheapPrepend) {
@@ -157,6 +152,13 @@ private:
       assert(readable == readableBytes());
     }
   }
+  
+private:
+  char* begin()
+  { return &*buffer_.begin(); }
+  
+  const char* begin() const
+  { return &*buffer_.begin(); }
 
 private:
   std::vector<char> buffer_;
