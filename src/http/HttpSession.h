@@ -1,25 +1,25 @@
 #ifndef LIBCPP_HTTPSESISON_H_
 #define LIBCPP_HTTPSESISON_H_
 
-extern "C"
-{
 #include "http_parser.h"
-}
-
 #include "utils/noncopyable.h"
 #include "net/TcpConnection.h"
+#include "HttpMessage.h"
 
 #include <memory>
 #include <map>
 
 namespace libcpp
 {
-
+class HttpSession;
+using HttpSessionSptr = std::shared_ptr<HttpSession>;
+using HttpCallback = std::function<int(const HttpSessionSptr& sess, HttpMessage* msg)>;
 /*
- * HttpSession: 
+ * HttpSession:
  *  a HttpSession is over a TcpConnection.
  */
-class HttpSession : public utils::noncopyable
+class HttpSession : public utils::noncopyable,
+                    public std::enable_shared_from_this<HttpSession>
 {
   friend class HttpParserSettings;
 public:
@@ -31,10 +31,19 @@ public:
    */
   HttpSession(const TcpConnSptr& tcpConn, http_parser_type parserType);
   ~HttpSession();
-  
-  // FIXME: use Buffer class?
+
   size_t execute(const char *buf, size_t length);
-  
+  void send(const std::string& msg)
+  { tcpConn_->send(msg); }
+
+  void setOnHeadersCallback(const HttpCallback& cb)
+  { onHeadersCallback_ = cb; }
+  void setOnMessageCallback(const HttpCallback& cb)
+  { onMessageCallback_ = cb; }
+
+  int shouldKeepAlive()
+  { return http_should_keep_alive(&parser_) == 0; }
+
 protected:
   int onMessageBegin();
   int onUrl(const char*, size_t);
@@ -44,20 +53,23 @@ protected:
   int onHeadersComplete();
   int onBody(const char*, size_t);
   int onMessageComplete();
-  
+
   int onChunkHeader() { return 0; }
   int onChunkComplete() { return 0; }
-  //int onUpgrade(const char*, size_t) override;
-  //int onError(const HttpError& error) override;
-  
+
 private:
   TcpConnSptr tcpConn_;
-  /* need message buffer? */
+  http_parser_type parserType_;
   http_parser parser_;
+
+  std::unique_ptr<HttpMessage> httpMessage_;
+
   std::string curField_;
   std::string curValue_;
-  std::map<std::string, std::string> headers_;
   bool lastIsValue_;
+
+  HttpCallback onHeadersCallback_;
+  HttpCallback onMessageCallback_;
 };
 
 }

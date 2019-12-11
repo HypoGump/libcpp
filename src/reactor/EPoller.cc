@@ -40,7 +40,7 @@ TimeStamp EPoller::poll(int timeoutMs, ChannelList* activeChannels)
                                 static_cast<int>(events_.size()),
                                 timeoutMs);
   TimeStamp now(TimeStamp::now());
-  
+
   if (numEvents > 0) {
     LOG_TRACE << "[EPoller] " << numEvents << " events happened";
     fillActiveChannels(numEvents, activeChannels);
@@ -55,7 +55,7 @@ TimeStamp EPoller::poll(int timeoutMs, ChannelList* activeChannels)
   else {
     LOG_SYSERR << "[EPoller] epoll_wait failed";
   }
-  
+
   return now;
 }
 
@@ -88,7 +88,7 @@ void EPoller::fillActiveChannels(int numEvents,
 void EPoller::updateChannel(Channel* channel)
 {
   assertInLoopThread();
-  
+
   int index = channel->index();
   if (index == kNew || index == kDeleted) {
     int fd = channel->fd();
@@ -122,9 +122,9 @@ void EPoller::removeChannel(Channel* channel)
   if (channel->index() == kAdded) {
     update(EPOLL_CTL_DEL, channel);
   }
-  /* 
-   * it has been removed from channels_, so for channels_, 
-   * it's a new channel 
+  /*
+   * it has been removed from channels_, so for channels_,
+   * it's a new channel
    */
   channel->set_index(kNew);
 }
@@ -139,11 +139,11 @@ void EPoller::update(int operation, Channel* channel)
   int fd = channel->fd();
   if (::epoll_ctl(epollfd_, operation, fd, &event) < 0) {
     if (operation == EPOLL_CTL_DEL) {
-      LOG_SYSERR << "[EPoller] epoll_ctl op=" << operation 
+      LOG_SYSERR << "[EPoller] epoll_ctl op=" << operation
                     << " fd=" << fd;
     }
     else {
-      LOG_SYSFATAL << "[EPoller] epoll_ctl op=" << operation 
+      LOG_SYSFATAL << "[EPoller] epoll_ctl op=" << operation
                     << " fd=" << fd;
     }
   }

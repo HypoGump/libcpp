@@ -14,32 +14,36 @@ namespace libcpp
 {
 class EventLoop;
 /*
- * HttpServer: a HttpServer is over a TcpServer 
+ * HttpServer: a HttpServer is over a TcpServer
  */
 class HttpServer : public utils::noncopyable
 {
 public:
-  HttpServer(EventLoop* loop, const InetAddress& addr, 
+  HttpServer(EventLoop* loop, const InetAddress& addr,
               const std::string& name = "HttpServer");
   ~HttpServer();
-  
+
   void start();
   void stop();
-  
-  
+
+  void setOnHeadersCallback(const HttpCallback& cb)
+  { onHeadersCallback_ = cb; }
+  void setOnMessageCallback(const HttpCallback& cb)
+  { onMessageCallback_ = cb; }
 
 private:
   void onConnection(const TcpConnSptr& conn);
   void onMessage(const TcpConnSptr&, Buffer*, TimeStamp);
-  
+
 private:
-  using HttpSessionUptr = std::unique_ptr<HttpSession>;
-  using SessionMap = std::map<TcpConnSptr, HttpSessionUptr>;
-  
+  using HttpSessionSptr = std::shared_ptr<HttpSession>;
+  using SessionMap = std::map<TcpConnSptr, HttpSessionSptr>;
+
   TcpServer tcpServer_;
   SessionMap sessions_;
-  
-  /* what callback should be provided by users? */
+
+  HttpCallback onMessageCallback_;
+  HttpCallback onHeadersCallback_;
 };
 
 }

@@ -6,7 +6,7 @@
 
 using namespace libcpp;
 
-HttpServer::HttpServer(EventLoop* loop, const InetAddress& addr, 
+HttpServer::HttpServer(EventLoop* loop, const InetAddress& addr,
                         const std::string& name)
  :  tcpServer_(loop, addr, name)
 {
@@ -19,7 +19,7 @@ HttpServer::HttpServer(EventLoop* loop, const InetAddress& addr,
 
 HttpServer::~HttpServer()
 {
-  
+
 }
 
 void HttpServer::start()
@@ -35,7 +35,9 @@ void HttpServer::onConnection(const TcpConnSptr& conn)
 {
   if (conn->connected())
   {
-    sessions_[conn] = make_unique<HttpSession>(conn, HTTP_REQUEST);
+    sessions_[conn] = std::make_shared<HttpSession>(conn, HTTP_REQUEST);
+    sessions_[conn]->setOnHeadersCallback(onHeadersCallback_);
+    sessions_[conn]->setOnMessageCallback(onMessageCallback_);
     LOG_TRACE << "connection established";
   }
   else
@@ -45,7 +47,7 @@ void HttpServer::onConnection(const TcpConnSptr& conn)
   }
 }
 
-void HttpServer::onMessage(const TcpConnSptr& conn, 
+void HttpServer::onMessage(const TcpConnSptr& conn,
                           Buffer* buf, TimeStamp receivedTime)
 {
   HttpSession *session = sessions_[conn].get();
