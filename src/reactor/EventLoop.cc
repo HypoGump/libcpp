@@ -13,7 +13,6 @@
 using namespace libcpp;
 
 __thread EventLoop* t_loopInThisThread = nullptr;
-static const int kPollTimeMs = 10000;
 
 /*
  * SIGPIPE's default operation is terminating process
@@ -45,17 +44,18 @@ static int createEventfd()
  * Note: initialize in declaration order
  *        threadId_ must be initialize before other objects
  */
-EventLoop::EventLoop()
+EventLoop::EventLoop(int ms)
   : looping_(false),
     quit_(false),
     doingPendingFunctors_(false),
     threadId_(std::this_thread::get_id()),
+    pollMs_(ms),
     poller_(new EPoller(this)),
     timerQueue_(new TimerQueue(this)),
     wakeupFd_(createEventfd()),
     wakeupChannel_(new Channel(this, wakeupFd_))
 {
-  LOG_TRACE << "[EventLoop] New eventloop " << this 
+  LOG_TRACE << "[EventLoop] New eventloop " << this
             << " created in thread " << threadId_;
   if (t_loopInThisThread) {
     LOG_FATAL << "[EventLoop] Another loop " << t_loopInThisThread
@@ -84,13 +84,13 @@ void EventLoop::runInLoop(const Functor& cb)
   }
 }
 
-void EventLoop::queueInLoop(const Functor& cb) 
+void EventLoop::queueInLoop(const Functor& cb)
 {
   {
   std::lock_guard<std::mutex> lock(mutex_);
   pendingFunctors_.push_back(cb);
   }
-  
+
   if (!isInLoopThread() || doingPendingFunctors_) {
     wakeup();
   }
@@ -132,10 +132,10 @@ void EventLoop::loop()
   assertInLoopThread();
   looping_ = true;
   quit_ = false;
-  
+
   while (!quit_) {
     activeChannels_.clear();
-    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
+    pollReturnTime_ = poller_->poll(pollMs_, &activeChannels_);
     for (auto& channel : activeChannels_) {
       channel->handleEvent(pollReturnTime_);
     }
@@ -145,7 +145,7 @@ void EventLoop::loop()
      */
     doPendingFunctors();
   }
-  
+
   LOG_TRACE << "EventLoop " << this << " stop looping";
   looping_ = false;
 }
@@ -186,16 +186,16 @@ void EventLoop::doPendingFunctors()
 {
   std::vector<Functor> functors;
   doingPendingFunctors_ = true;
-  
+
   {
   std::lock_guard<std::mutex> lock(mutex_);
   functors.swap(pendingFunctors_);
   }
-  
+
   for (auto& func : functors) {
     func();
   }
-  
+
   doingPendingFunctors_ = false;
 }
 

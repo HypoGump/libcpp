@@ -12,8 +12,8 @@ using namespace libcpp;
 class LogFile::File
 {
 public:
-  File(const std::string& filename) 
-      // 'e' : The underlying file descriptor will be closed 
+  File(const std::string& filename)
+      // 'e' : The underlying file descriptor will be closed
       //      if you use any of the exec… functions
     : fp_(::fopen(filename.data(), "ae")),
       writtenBytes_(0)
@@ -22,22 +22,23 @@ public:
     // why set buffer?
     ::setbuffer(fp_, buffer_, sizeof(buffer_));
   }
-  
+
   ~File() {
     ::fclose(fp_);
   }
-  
+
   void append(const char* logline, int len) {
     size_t n = write(logline, len);
     size_t remain = len - n;
-    
+
     while (remain > 0) {
       size_t x = write(logline + n, len);
       if (x == 0) {
         int err = ferror(fp_);
         if (err) {
           char buf[128];
-          (void)strerror_r(err, buf, sizeof(buf));
+          char* ret = strerror_r(err, buf, sizeof(buf));
+          (void)ret;
           fprintf(stderr, "LogFile::File::append() failed %s\n", buf);
         }
         break;
@@ -45,21 +46,21 @@ public:
       n += x;
       remain -= x;
     }
-    
+
     writtenBytes_ += len;
   }
-    
+
   void flush() {
     ::fflush(fp_);
   }
-  
+
   size_t writtenBytes() const { return writtenBytes_; }
-  
+
 private:
   size_t write(const char* logline, size_t len) {
     return ::fwrite_unlocked(logline, 1, len, fp_);
   }
-  
+
   FILE* fp_;
   char buffer_[64*1024];
   size_t writtenBytes_;
@@ -81,7 +82,7 @@ LogFile::LogFile(const std::string& basename, size_t rollSize,
   rollFile();
 }
 
-LogFile::~LogFile() 
+LogFile::~LogFile()
 {}
 
 void LogFile::append(const char* logline, int len) {
@@ -106,8 +107,8 @@ void LogFile::flush() {
 
 void LogFile::append_unlocked(const char* logline, int len) {
   file_->append(logline, len);
-  
-  // when current file is filled, write next file 
+
+  // when current file is filled, write next file
   if (file_->writtenBytes() > rollSize_) {
     rollFile();
   }
@@ -129,7 +130,7 @@ void LogFile::append_unlocked(const char* logline, int len) {
 void LogFile::rollFile() {
   time_t now = 0;
   std::string filename = getLogFileName(basename_, &now);
-  
+
   startDay_ = now / kSecondsPerDay_;
   lastFlushTime_ = now;
   file_.reset(new File(filename));
@@ -146,11 +147,11 @@ std::string LogFile::getLogFileName(const std::string& basename, time_t* now) {
   gmtime_r(now, &tm); // FIXME: localtime_r ?
   strftime(timebuf, sizeof timebuf, ".%Y%m%d-%H%M%S.", &tm);
   filename += timebuf;
-  
+
   char hostname[128];
   ::gethostname(hostname, sizeof(hostname));
   filename += hostname;
-  
+
   char pidbuf[32];
   snprintf(pidbuf, sizeof pidbuf, ".%d", ::getpid()); // FIXME: ProcessInfo::pid();
   filename += pidbuf;

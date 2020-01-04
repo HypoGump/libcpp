@@ -33,23 +33,12 @@ void handler(int sig) {
   msgs = backtrace_symbols(array, size);
   fprintf(stderr, "Error: signal %d:\n"
                 "[backtrace] Execution path:\n", sig);
-  
+
   for (size_t i = 0; i < size; ++i) {
     fprintf(stderr, "#%d %s\n", (int)i, msgs[i]);
-    
-    size_t p = 0;
-    while (msgs[i][p] != '(' && msgs[i][p] != ' '
-            && msgs[i][p] != 0)
-    {
-      ++p;
-    }
-    
-    char syscom[256];
-    ::snprintf(syscom, sizeof syscom, 
-        "addr2line %p -e %.*s", array[i], (int)p, msgs[i]);
-    (void)::system(syscom);
   }
-  
+
+  free(msgs);
   exit(1);
 }
 
@@ -75,7 +64,7 @@ Logger::LogLevel initLogLevel()
 
 Logger::LogLevel g_logLevel = initLogLevel();
 
-const char* LogLevelColor[Logger::NUM_LOG_LEVELS] = 
+const char* LogLevelColor[Logger::NUM_LOG_LEVELS] =
 {
   "\033[1;37m",     /* TRACE - WHITE */
   "\033[0;36m",     /* DEBUG - CYAN */
@@ -118,7 +107,7 @@ Logger::FlushFunc g_flush = defaultFlush;
 
 using namespace libcpp;
 
-Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char* func, int line) 
+Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char* func, int line)
   : timestamp_(TimeStamp::now()),
     level_(level),
     line_(line),
@@ -128,13 +117,13 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
 {
   const char* base_start_pos = strrchr(fullname_, '/');
   basename_ = (base_start_pos != NULL) ? base_start_pos + 1 : fullname_;
-  
+
   recordFormatTime();
   // record ThreadId
   stream_ << std::this_thread::get_id() << ' ';
   // record LogLevel
   stream_ << LogLevelColor[level_] << LogLevelName[level_] << EndColor;
-  // record file/func:line 
+  // record file/func:line
   stream_ << basename_ << "/" << func_ << ':' << line_ << " - ";
   // record old errno
   if (savedErrno != 0) {
@@ -145,11 +134,11 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const char* file, const char*
 
 void Logger::Impl::recordFormatTime() {
   int64_t microSecondsSinceEpoch = timestamp_.microSecondsSinceEpoch();
-  time_t seconds = static_cast<time_t>(microSecondsSinceEpoch 
+  time_t seconds = static_cast<time_t>(microSecondsSinceEpoch
                                         / TimeStamp::kMicroSecondsPerSecond);
-  int microseconds = static_cast<int>(microSecondsSinceEpoch 
+  int microseconds = static_cast<int>(microSecondsSinceEpoch
                                         % TimeStamp::kMicroSecondsPerSecond);
-  
+
   if (t_seconds != seconds) {
     t_seconds = seconds;
     struct tm tm_time;
@@ -179,7 +168,7 @@ Logger::Logger(const char* file, const char* func, int line, bool toAbort)
 
 /* TEST */
 
-std::ostringstream& Logger::stream() 
+std::ostringstream& Logger::stream()
 {
   return stream_;
 }

@@ -5,6 +5,7 @@
 #include <functional>
 #include <atomic>
 #include <stdint.h>
+#include <sys/timerfd.h>
 
 namespace libcpp
 {
@@ -21,25 +22,33 @@ public:
       sequence_(s_numCreated_++)
   {
   }
-  
+
   void run() const { callback_(); }
-  
+
   TimeStamp expiration() const { return expiration_; }
   int64_t sequence() const { return sequence_; }
   bool repeat() const { return repeat_; }
-  
+
   void restart(TimeStamp now);
-  
+
 private:
   const TimerCallback callback_;
   TimeStamp expiration_;
   const double intervalSeconds_;
   const bool repeat_;
-  const int64_t sequence_;
-  
-  static std::atomic<long long> s_numCreated_;
+  const uint64_t sequence_;
+
+  static std::atomic<uint64_t> s_numCreated_;
 };
 
+namespace detail
+{
+struct timespec howMuchTimeFromNow(TimeStamp when);
+int createTimerfd();
+void resetTimerfd(int timerfd, TimeStamp expiration);
+void readTimerfd(int timerfd, TimeStamp now);
 }
+
+} /* libcpp */
 
 #endif
