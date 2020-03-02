@@ -187,12 +187,21 @@ int HttpSession::onHeaderValue(const char* at, size_t length)
   LOG_TRACE << std::string(at, length);
   curValue_.append(at, length);
   lastIsValue_ = true;
+  // httpMessage_->addHeader(curField_, curValue_);
   return 0;
 }
 
 int HttpSession::onHeadersComplete()
 {
   LOG_TRACE << "Header Complete";
+  httpMessage_->setMethod(static_cast<http_method>(parser_.method));
+  if (lastIsValue_)  {
+    if (!curField_.empty()) {
+      httpMessage_->addHeader(curField_, curValue_);
+    }
+    curField_.clear();
+    curValue_.clear();
+  }
   /*
    * URL format:
    *  protocol://hostname[:port]/path/[;parameters][?query]#fragment
@@ -216,9 +225,11 @@ int HttpSession::onHeadersComplete()
   }
 
   if (url.field_set & (1 << UF_PATH)) {
-    httpMessage_->setPath(urlStr.substr(url.field_data[UF_PATH].off, url.field_data[UF_PATH].len));
+    httpMessage_->setPath(
+        urlStr.substr(url.field_data[UF_PATH].off, url.field_data[UF_PATH].len));
   }
-  if (onHeadersCallback_) return onHeadersCallback_(shared_from_this(), httpMessage_.get());
+  if (onHeadersCallback_)
+    return onHeadersCallback_(shared_from_this(), httpMessage_.get());
   return 0;
 }
 
@@ -232,7 +243,8 @@ int HttpSession::onBody(const char* at, size_t length)
 int HttpSession::onMessageComplete()
 {
   LOG_TRACE << "Message Complete";
-  if (onMessageCallback_) return onMessageCallback_(shared_from_this(), httpMessage_.get());
+  if (onMessageCallback_)
+    return onMessageCallback_(shared_from_this(), httpMessage_.get());
   return 0;
 }
 

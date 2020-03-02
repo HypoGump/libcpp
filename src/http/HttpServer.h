@@ -21,7 +21,7 @@ class HttpServer : public utils::noncopyable
 public:
   HttpServer(EventLoop* loop, const InetAddress& addr,
               const std::string& name = "HttpServer");
-  ~HttpServer();
+  virtual ~HttpServer();
 
   void start();
   void stop();
@@ -32,15 +32,16 @@ public:
   { onMessageCallback_ = cb; }
 
 private:
-  void onConnection(const TcpConnSptr& conn);
-  void onMessage(const TcpConnSptr&, Buffer*, TimeStamp);
+  virtual void onConnection(const TcpConnSptr& conn);
+  virtual void onMessage(const TcpConnSptr&, Buffer*, TimeStamp);
 
-private:
+protected:
   using HttpSessionSptr = std::shared_ptr<HttpSession>;
   using SessionMap = std::map<TcpConnSptr, HttpSessionSptr>;
 
-  TcpServer tcpServer_;
   SessionMap sessions_;
+private:
+  TcpServer tcpServer_;
 
   HttpCallback onMessageCallback_;
   HttpCallback onHeadersCallback_;

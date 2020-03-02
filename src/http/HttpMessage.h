@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <sstream>
+#include <iostream>
 
 namespace libcpp
 {
@@ -19,6 +20,7 @@ public:
   ~HttpMessage() {}
 
   void setMethod(http_method method) {
+    method_.clear();
     method_.append(http_method_str(method));
   }
 
@@ -39,8 +41,26 @@ public:
 
   void setPath(const std::string& path) { path_ = path; }
 
+  std::string getMethod() const { return method_; }
   std::string getUrl() const { return url_; }
   std::string getPath() const { return path_; }
+  std::string getBody() const {return body_; }
+  std::string getValueByHeader(const std::string& header) const
+  {
+    auto it = headers_.find(header);
+    return it == headers_.end() ? "" : it->second;
+  }
+
+  void printHeaders() const
+  {
+    for (auto& pss : headers_) {
+      std::cout << pss.first << " : " << pss.second << std::endl;
+    }
+  }
+
+  void resetBody() { body_.clear(); }
+  void delHeaderByField(const std::string& field)
+  { headers_.erase(field); }
 
   std::string getResponseAsString() {
     std::stringstream ss;

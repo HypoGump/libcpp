@@ -50,7 +50,9 @@ void HttpServer::onConnection(const TcpConnSptr& conn)
 void HttpServer::onMessage(const TcpConnSptr& conn,
                           Buffer* buf, TimeStamp receivedTime)
 {
+  (void)receivedTime;
   HttpSession *session = sessions_[conn].get();
   session->execute(buf->data(), buf->readableBytes());
+  buf->retrieveAll();
 }
 
