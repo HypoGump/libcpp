@@ -41,6 +41,31 @@
 
 # 性能测试
 
+## HTTP 服务器
+测试环境：1核 2G 1Mbps
+测试命令：`webbench -c 1000 -t 60  http://106.52.193.215:9981/index.html`
+```shell
+# 单线程
+Webbench - Simple Web Benchmark 1.5
+Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+
+Benchmarking: GET http://106.52.193.215:9981/index.html
+1000 clients, running 60 sec.
+
+Speed=4251 pages/min, 8068 bytes/sec.
+Requests: 4063 susceed, 188 failed.
+
+# 双线程
+Webbench - Simple Web Benchmark 1.5
+Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+
+Benchmarking: GET http://106.52.193.215:9981/index.html
+1000 clients, running 60 sec.
+
+Speed=5677 pages/min, 10120 bytes/sec.
+Requests: 5583 susceed, 94 failed.
+```
+
 ## 日志
 测试环境：WSL Ubuntu 18.04 LTS，i5- 8265U，RAM 8G，单线程写入100W条日志
 

@@ -25,7 +25,7 @@ public:
 
   void start();
   void stop();
-
+  void setThreadNum(int num) { tcpServer_.setThreadNum(num); }
   void setOnHeadersCallback(const HttpCallback& cb)
   { onHeadersCallback_ = cb; }
   void setOnMessageCallback(const HttpCallback& cb)

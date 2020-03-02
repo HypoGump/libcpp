@@ -20,29 +20,30 @@ int onHeaders(const HttpSessionSptr& sess, HttpMessage* msg)
 
   char buf[512];
   memset(buf, 0, 512);
-  read(fd, buf, 512);
+  ssize_t n = read(fd, buf, 512);
 
   HttpMessage resp;
   resp.appendBody(buf);
-
-  if (sess->shouldKeepAlive()) {
-    LOG_TRACE << "Wow! Keep alive";
-  }
-  else {
-    resp.addHeader("Connection", "close");
-  }
-
+  resp.addHeader("Content-Type", "text/html");
+  resp.addHeader("Content-Length", std::to_string(n));
+  resp.addHeader("Connection", "close");
+  // std::cout << msg->getRequestAsString() << "\n";
+  // std::cout << resp.getResponseAsString() << "\n";
+  // std::cout << "-------\n";
   sess->send(resp.getResponseAsString());
+  sess->shutdown();
   return 0;
 }
 
 int main()
 {
+  Logger::setLogLevel(Logger::FATAL);
   InetAddress addr(9981);
   EventLoop loop;
 
   HttpServer server(&loop, addr);
   server.setOnHeadersCallback(onHeaders);
+  server.setThreadNum(1);
   server.start();
 
   loop.loop();

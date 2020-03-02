@@ -35,6 +35,8 @@ public:
   size_t execute(const char *buf, size_t length);
   void send(const std::string& msg)
   { tcpConn_->send(msg); }
+  void shutdown()
+  { tcpConn_->shutdown(); }
 
   void setOnHeadersCallback(const HttpCallback& cb)
   { onHeadersCallback_ = cb; }
